@@ -72,9 +72,9 @@ const HTML_TAG_NODE_TYPES: Partial<
   audio: BLOCKS.EMBEDDED_ASSET,
 };
 
-type Next = (node: HTMLNode) => Array<Node | Text | Mark>;
+export type Next = (node: HTMLNode) => Array<Node | Text | Mark>;
 
-const convertBlockNode =
+export const convertBlockNode =
   (nodeType: BLOCKS) =>
   (node: HTMLElementNode, next: Next): Array<Node | Mark | Text> => {
     const block: Block = {
@@ -85,7 +85,7 @@ const convertBlockNode =
     return [block];
   };
 
-const convertInlineNode =
+export const convertInlineNode =
   (nodeType: INLINES) =>
   (node: HTMLElementNode, next: Next): Array<Node | Mark | Text> => {
     const inline: Inline = {
@@ -96,7 +96,7 @@ const convertInlineNode =
     return [inline];
   };
 
-const convertAnchorNode = (node: HTMLElementNode, next: Next) => {
+export const convertAnchorNode = (node: HTMLElementNode, next: Next) => {
   const anchor: Inline = {
     nodeType: INLINES.HYPERLINK,
     content: next(node) as Array<Inline | Text>,
@@ -107,24 +107,25 @@ const convertAnchorNode = (node: HTMLElementNode, next: Next) => {
   return [anchor];
 };
 
-const convertMarkNode = (nodeType: MARKS) => (_: HTMLElementNode, __: Next) => {
-  const mark: Mark = {
-    type: nodeType,
+export const convertMarkNode =
+  (nodeType: MARKS) => (_: HTMLElementNode, __: Next) => {
+    const mark: Mark = {
+      type: nodeType,
+    };
+    return [mark];
   };
-  return [mark];
-};
 
-type ConvertNode = Record<
+export type ConvertNode = Record<
   HTMLTagName,
   (node: HTMLElementNode, next: Next) => Array<Node | Text | Mark>
 >;
 
-type ConvertMark = Record<
+export type ConvertMark = Record<
   HTMLTagName,
   (node: HTMLElementNode, next: Next) => Array<Node | Text | Mark>
 >;
 
-interface ConvertOptions {
+export interface ConvertOptions {
   convertNode: Partial<ConvertNode>;
   convertMark: Partial<ConvertMark>;
 }
