@@ -1,0 +1,39 @@
+name: Create Semantic Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Make sure only one deployment can happen at a time
+# To make sure Semantic Release does not run concurrently and select the same version
+concurrency: release
+
+jobs:
+  automatic-release:
+    name: Semantic Release
+    runs-on: ubuntu-latest
+    outputs:
+      release_version: ${{ steps.semantic-release.outputs.release-version }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup NodeJS
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "npm"
+          cache-dependency-path: "**/package-lock.json"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - uses: codfish/semantic-release-action@v2
+        id: semantic-release
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
