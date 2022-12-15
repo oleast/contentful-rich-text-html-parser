@@ -5,7 +5,6 @@ import {
   DocumentType,
   TextNode,
   CommentNode,
-  Element,
 } from "parse5/dist/tree-adapters/default";
 import { isNotNull } from "./utils";
 

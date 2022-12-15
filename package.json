@@ -1,7 +1,23 @@
 {
   "name": "contentful-rich-text-html-parser",
   "version": "1.0.0",
-  "description": "",
+  "description": "Convert any HTML to the Contentful Rich Text format",
+  "author": {
+    "name": "oleast"
+  },
+  "license": "MIT",
+  "keywords": [
+    "Contentful",
+    "Rich Text",
+    "Parser",
+    "Converter"
+  ],
+  "homepage": "https://github.com/oleast/contentful-rich-text-html-parser",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oleast/contentful-rich-text-html-parser"
+  },
+  "bugs": "https://github.com/oleast/contentful-rich-text-html-parser/issues",
   "main": "./dist/index.js",
   "types": "./dist/types/index.d.ts",
   "sideEffects": false,
@@ -14,8 +30,6 @@
     "test": "vitest run",
     "test:watch": "vitest watch"
   },
-  "author": "oleast",
-  "license": "MIT",
   "devDependencies": {
     "@contentful/rich-text-html-renderer": "^16.0.2",
     "@semantic-release/commit-analyzer": "^9.0.2",
