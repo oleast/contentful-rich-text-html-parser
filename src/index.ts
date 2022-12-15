@@ -8,5 +8,5 @@ export {
   ConvertMark,
   ConvertNode,
   ConvertOptions,
-} from "htmlStringToDocument";
-export { HTMLElementNode, HTMLNode, HTMLTextNode, HTMLTagName } from "types";
+} from "./htmlStringToDocument";
+export { HTMLElementNode, HTMLNode, HTMLTextNode, HTMLTagName } from "./types";
