@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig",
   "compilerOptions": {},
-  "exclude": ["src/test", "node_modules"]
+  "exclude": ["src/test", "node_modules", "dist"]
 }
