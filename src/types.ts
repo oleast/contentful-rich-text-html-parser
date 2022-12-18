@@ -1,3 +1,5 @@
+import type { Mark, Node, Text } from "@contentful/rich-text-types";
+
 export type HTMLTagName = keyof HTMLElementTagNameMap;
 
 export interface HTMLTextNode {
@@ -13,3 +15,13 @@ export interface HTMLElementNode {
 }
 
 export type HTMLNode = HTMLElementNode | HTMLTextNode;
+
+export type AnyContentfulNode = Node | Mark | Text;
+export type ConverterResult = AnyContentfulNode | Array<AnyContentfulNode>;
+
+export type Next = (node: HTMLNode) => ConverterResult;
+
+export type TagConverter = (
+  node: HTMLElementNode,
+  next: Next
+) => ConverterResult;

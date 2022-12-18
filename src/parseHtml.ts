@@ -8,7 +8,7 @@ import {
 } from "parse5/dist/tree-adapters/default";
 import { isNotNull } from "./utils";
 
-import { HTMLNode, HTMLTagName } from "./types";
+import type { HTMLNode, HTMLTagName } from "./types";
 
 const isChildNodeComment = (childNode: ChildNode): childNode is CommentNode => {
   return childNode.nodeName === "#comment";
