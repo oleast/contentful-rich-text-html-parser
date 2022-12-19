@@ -1,11 +1,10 @@
 import {
-  getAsList,
+  appendMarksToChildren,
   isBlockType,
   isInlineType,
   isMarkType,
-  isNodeTypeText,
 } from "./utils";
-import type { HTMLTagName, TagConverter } from "./types";
+import type { HTMLTagName, HTMLTextNode, TagConverter } from "./types";
 import {
   Block,
   BLOCKS,
@@ -99,12 +98,15 @@ export const convertTagToMark: TagConverter = (node, next) => {
   const mark: Mark = {
     type: nodeType,
   };
-  const children = next(node);
-  const childrenAsList = getAsList(children);
-  return childrenAsList.map((child) => {
-    if (isNodeTypeText(child)) {
-      child.marks = [...child.marks, mark];
-    }
-    return child;
-  });
+  return appendMarksToChildren(mark, node, next);
+};
+
+export const convertTextNodeToText = (node: HTMLTextNode): Text => {
+  const textNode: Text = {
+    nodeType: "text",
+    marks: [],
+    value: node.value,
+    data: {},
+  };
+  return textNode;
 };

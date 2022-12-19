@@ -25,3 +25,10 @@ export type TagConverter = (
   node: HTMLElementNode,
   next: Next
 ) => ConverterResult;
+
+export type ConvertTagOptions = Record<HTMLTagName | string, TagConverter>;
+
+export interface Options {
+  convertTag?: ConvertTagOptions;
+  convertText?: (node: HTMLTextNode) => Text;
+}

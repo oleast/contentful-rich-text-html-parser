@@ -1,10 +1,14 @@
+import { Next, ConverterResult, HTMLNode } from "./types";
 import {
   BLOCKS,
+  Document,
   INLINES,
   Mark,
   MARKS,
   Node,
+  NodeData,
   Text,
+  TopLevelBlock,
 } from "@contentful/rich-text-types";
 import { MARK_TYPES, INLINE_TYPES, BLOCK_TYPES } from "./constants";
 
@@ -41,3 +45,28 @@ export const isNodeTypeText = (node: Node | Text | Mark): node is Text => {
   }
   return false;
 };
+
+export const appendMarksToChildren = (
+  mark: Mark | Mark[],
+  node: HTMLNode,
+  next: Next
+): ConverterResult => {
+  const children = next(node);
+  const childrenAsList = getAsList(children);
+  const marksAsList = getAsList(mark);
+  return childrenAsList.map((child) => {
+    if (isNodeTypeText(child)) {
+      child.marks = [...child.marks, ...marksAsList];
+    }
+    return child;
+  });
+};
+
+export const createDocumentNode = (
+  content: TopLevelBlock[],
+  data: NodeData = {}
+): Document => ({
+  nodeType: BLOCKS.DOCUMENT,
+  data,
+  content,
+});
