@@ -1,2 +1,10 @@
 export { htmlStringToDocument } from "./htmlStringToDocument";
-export { HTMLElementNode, HTMLNode, HTMLTextNode, HTMLTagName } from "./types";
+export type {
+  HTMLElementNode,
+  HTMLNode,
+  HTMLTextNode,
+  HTMLTagName,
+  Options,
+  ConvertTagOptions,
+  TagConverter,
+} from "./types";
