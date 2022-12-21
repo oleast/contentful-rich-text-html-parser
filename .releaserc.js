@@ -9,6 +9,7 @@ module.exports = {
     ],
     "@semantic-release/release-notes-generator",
     "@semantic-release/npm",
+    "@semantic-release/github",
     [
       "@semantic-release/git",
       {
@@ -17,6 +18,5 @@ module.exports = {
           "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
       },
     ],
-    "@semantic-release/github",
   ],
 };
