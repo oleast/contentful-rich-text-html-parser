@@ -3,6 +3,7 @@ import {
   convertTagToBlock,
   convertTagToHyperlink,
   convertTextNodeToText,
+  convertTagToChildren,
 } from "./converters";
 import { parseHtml } from "./parseHtml";
 import { TopLevelBlock, Document } from "@contentful/rich-text-types";
@@ -11,6 +12,7 @@ import type {
   HTMLTagName,
   Next,
   Options,
+  OptionsWithDefaults,
   TagConverter,
 } from "./types";
 import { createDocumentNode } from "./utils";
@@ -42,13 +44,16 @@ const DEFAULT_TAG_CONVERTERS: Partial<Record<HTMLTagName, TagConverter>> = {
   a: convertTagToHyperlink,
 };
 
-const mapHtmlNodeToRichTextNode = (node: HTMLNode, options: Options) => {
+const mapHtmlNodeToRichTextNode = (
+  node: HTMLNode,
+  options: OptionsWithDefaults
+) => {
+  const { convertText, convertTag } = options;
   if (node.type === "text") {
-    const textConverter = options.convertText ?? convertTextNodeToText;
-    return textConverter(node);
+    return convertText(node);
   }
 
-  const next: Next = (node) => {
+  const mapChildren = (node: HTMLNode) => {
     if (node.type === "element") {
       return node.children.flatMap((child) =>
         mapHtmlNodeToRichTextNode(child, options)
@@ -57,10 +62,11 @@ const mapHtmlNodeToRichTextNode = (node: HTMLNode, options: Options) => {
     return mapHtmlNodeToRichTextNode(node, options);
   };
 
-  const tagConverter =
-    options?.convertTag?.[node.tagName] ??
-    DEFAULT_TAG_CONVERTERS[node.tagName] ??
-    next;
+  const next: Next = (node) => {
+    return mapChildren(node);
+  };
+
+  const tagConverter = convertTag?.[node.tagName] ?? convertTagToChildren;
   const convertedNode = tagConverter(node, next);
   return convertedNode;
 };
@@ -69,9 +75,16 @@ export const htmlStringToDocument = (
   htmlString: string,
   options: Options = {}
 ): Document => {
+  const optionsWithDefaults: OptionsWithDefaults = {
+    convertTag: {
+      ...DEFAULT_TAG_CONVERTERS,
+      ...options.convertTag,
+    },
+    convertText: options.convertText ?? convertTextNodeToText,
+  };
   const parsedHtml = parseHtml(htmlString);
   const richTextNodes = parsedHtml.flatMap((node) =>
-    mapHtmlNodeToRichTextNode(node, options)
+    mapHtmlNodeToRichTextNode(node, optionsWithDefaults)
   );
   return createDocumentNode(richTextNodes as TopLevelBlock[]);
 };

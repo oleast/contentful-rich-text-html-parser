@@ -28,7 +28,9 @@ export type TagConverter = (
 
 export type ConvertTagOptions = Record<HTMLTagName | string, TagConverter>;
 
-export interface Options {
-  convertTag?: ConvertTagOptions;
-  convertText?: (node: HTMLTextNode) => Text;
+export interface OptionsWithDefaults {
+  convertTag: ConvertTagOptions;
+  convertText: (node: HTMLTextNode) => Text;
 }
+
+export type Options = Partial<OptionsWithDefaults>;

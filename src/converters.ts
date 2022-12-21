@@ -101,6 +101,10 @@ export const convertTagToMark: TagConverter = (node, next) => {
   return appendMarksToChildren(mark, node, next);
 };
 
+export const convertTagToChildren: TagConverter = (node, next) => {
+  return next(node);
+};
+
 export const convertTextNodeToText = (node: HTMLTextNode): Text => {
   const textNode: Text = {
     nodeType: "text",
