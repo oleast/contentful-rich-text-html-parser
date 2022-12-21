@@ -3,19 +3,30 @@ import {
   convertTagToBlock,
   convertTagToHyperlink,
   convertTextNodeToText,
+  convertTagToChildren,
 } from "./converters";
 import { parseHtml } from "./parseHtml";
-import { TopLevelBlock, Document } from "@contentful/rich-text-types";
+import {
+  TopLevelBlock,
+  Document,
+  Mark,
+  Text,
+  Inline,
+  Block,
+} from "@contentful/rich-text-types";
 import type {
   HTMLNode,
   HTMLTagName,
   Next,
   Options,
+  OptionsWithDefaults,
   TagConverter,
 } from "./types";
-import { createDocumentNode } from "./utils";
+import { createDocumentNode, getAsList } from "./utils";
 
-const DEFAULT_TAG_CONVERTERS: Partial<Record<HTMLTagName, TagConverter>> = {
+const DEFAULT_TAG_CONVERTERS: Partial<
+  Record<HTMLTagName, TagConverter<Block | Inline | Text>>
+> = {
   h1: convertTagToBlock,
   h2: convertTagToBlock,
   h3: convertTagToBlock,
@@ -42,25 +53,32 @@ const DEFAULT_TAG_CONVERTERS: Partial<Record<HTMLTagName, TagConverter>> = {
   a: convertTagToHyperlink,
 };
 
-const mapHtmlNodeToRichTextNode = (node: HTMLNode, options: Options) => {
+const mapHtmlNodeToRichTextNode = (
+  node: HTMLNode,
+  marks: Mark[],
+  options: OptionsWithDefaults
+) => {
+  const { convertText, convertTag } = options;
   if (node.type === "text") {
-    const textConverter = options.convertText ?? convertTextNodeToText;
-    return textConverter(node);
+    return convertText(node, marks);
   }
 
-  const next: Next = (node) => {
+  const mapChildren: Next = (node, mark) => {
+    const newMarks = mark ? getAsList(mark) : [];
+    const allMarks = newMarks.concat(marks);
     if (node.type === "element") {
       return node.children.flatMap((child) =>
-        mapHtmlNodeToRichTextNode(child, options)
+        mapHtmlNodeToRichTextNode(child, allMarks, options)
       );
     }
-    return mapHtmlNodeToRichTextNode(node, options);
+    return getAsList(mapHtmlNodeToRichTextNode(node, allMarks, options));
   };
 
-  const tagConverter =
-    options?.convertTag?.[node.tagName] ??
-    DEFAULT_TAG_CONVERTERS[node.tagName] ??
-    next;
+  const next: Next = (node, marks) => {
+    return mapChildren(node, marks);
+  };
+
+  const tagConverter = convertTag?.[node.tagName] ?? convertTagToChildren;
   const convertedNode = tagConverter(node, next);
   return convertedNode;
 };
@@ -69,9 +87,16 @@ export const htmlStringToDocument = (
   htmlString: string,
   options: Options = {}
 ): Document => {
+  const optionsWithDefaults: OptionsWithDefaults = {
+    convertTag: {
+      ...DEFAULT_TAG_CONVERTERS,
+      ...options.convertTag,
+    },
+    convertText: options.convertText ?? convertTextNodeToText,
+  };
   const parsedHtml = parseHtml(htmlString);
   const richTextNodes = parsedHtml.flatMap((node) =>
-    mapHtmlNodeToRichTextNode(node, options)
+    mapHtmlNodeToRichTextNode(node, [], optionsWithDefaults)
   );
   return createDocumentNode(richTextNodes as TopLevelBlock[]);
 };
