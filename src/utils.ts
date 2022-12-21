@@ -1,4 +1,3 @@
-import { Next, ConverterResult, HTMLNode } from "./types";
 import {
   BLOCKS,
   Document,
@@ -44,22 +43,6 @@ export const isNodeTypeText = (node: Node | Text | Mark): node is Text => {
     return true;
   }
   return false;
-};
-
-export const appendMarksToChildren = (
-  mark: Mark | Mark[],
-  node: HTMLNode,
-  next: Next
-): ConverterResult => {
-  const children = next(node);
-  const childrenAsList = getAsList(children);
-  const marksAsList = getAsList(mark);
-  return childrenAsList.map((child) => {
-    if (isNodeTypeText(child)) {
-      child.marks = [...child.marks, ...marksAsList];
-    }
-    return child;
-  });
 };
 
 export const createDocumentNode = (

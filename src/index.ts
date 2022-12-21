@@ -7,4 +7,6 @@ export type {
   Options,
   ConvertTagOptions,
   TagConverter,
+  TextConverter,
+  Next,
 } from "./types";

@@ -6,7 +6,14 @@ import {
   convertTagToChildren,
 } from "./converters";
 import { parseHtml } from "./parseHtml";
-import { TopLevelBlock, Document } from "@contentful/rich-text-types";
+import {
+  TopLevelBlock,
+  Document,
+  Mark,
+  Text,
+  Inline,
+  Block,
+} from "@contentful/rich-text-types";
 import type {
   HTMLNode,
   HTMLTagName,
@@ -15,9 +22,11 @@ import type {
   OptionsWithDefaults,
   TagConverter,
 } from "./types";
-import { createDocumentNode } from "./utils";
+import { createDocumentNode, getAsList } from "./utils";
 
-const DEFAULT_TAG_CONVERTERS: Partial<Record<HTMLTagName, TagConverter>> = {
+const DEFAULT_TAG_CONVERTERS: Partial<
+  Record<HTMLTagName, TagConverter<Block | Inline | Text>>
+> = {
   h1: convertTagToBlock,
   h2: convertTagToBlock,
   h3: convertTagToBlock,
@@ -46,24 +55,27 @@ const DEFAULT_TAG_CONVERTERS: Partial<Record<HTMLTagName, TagConverter>> = {
 
 const mapHtmlNodeToRichTextNode = (
   node: HTMLNode,
+  marks: Mark[],
   options: OptionsWithDefaults
 ) => {
   const { convertText, convertTag } = options;
   if (node.type === "text") {
-    return convertText(node);
+    return convertText(node, marks);
   }
 
-  const mapChildren = (node: HTMLNode) => {
+  const mapChildren: Next = (node, mark) => {
+    const newMarks = mark ? getAsList(mark) : [];
+    const allMarks = newMarks.concat(marks);
     if (node.type === "element") {
       return node.children.flatMap((child) =>
-        mapHtmlNodeToRichTextNode(child, options)
+        mapHtmlNodeToRichTextNode(child, allMarks, options)
       );
     }
-    return mapHtmlNodeToRichTextNode(node, options);
+    return getAsList(mapHtmlNodeToRichTextNode(node, allMarks, options));
   };
 
-  const next: Next = (node) => {
-    return mapChildren(node);
+  const next: Next = (node, marks) => {
+    return mapChildren(node, marks);
   };
 
   const tagConverter = convertTag?.[node.tagName] ?? convertTagToChildren;
@@ -84,7 +96,7 @@ export const htmlStringToDocument = (
   };
   const parsedHtml = parseHtml(htmlString);
   const richTextNodes = parsedHtml.flatMap((node) =>
-    mapHtmlNodeToRichTextNode(node, optionsWithDefaults)
+    mapHtmlNodeToRichTextNode(node, [], optionsWithDefaults)
   );
   return createDocumentNode(richTextNodes as TopLevelBlock[]);
 };

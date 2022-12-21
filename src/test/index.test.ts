@@ -4,15 +4,14 @@ import {
   Block,
   BLOCKS,
   Document,
-  Inline,
-  Text,
+  Mark,
   TopLevelBlock,
 } from "@contentful/rich-text-types";
 import { htmlStringToDocument } from "../htmlStringToDocument";
 
 import { describe, expect, it } from "vitest";
 import { EXAMPLE_RICH_TEXT } from "./example";
-import { createDocumentNode, getAsList } from "../utils";
+import { createDocumentNode } from "../utils";
 import * as helpers from "./helpers";
 
 // https://www.contentful.com/developers/docs/tutorials/general/getting-started-with-rich-text-field-type/
@@ -50,17 +49,6 @@ const richTextDocument: Document = {
 const htmlString = documentToHtmlString(EXAMPLE_RICH_TEXT);
 
 describe("Parse HTML string to Contentful Document", () => {
-  /*it("Parse string to generic HTML nodes", () => {
-    const htmlNodes = parseHtml(CISION_EXAMPLE);
-    expect(htmlNodes).toEqual([]);
-  });*/
-
-  /*it("Parse HTML string to Contentful Rich Text", () => {
-    const htmlNodes = htmlStringToDocument(CISION_EXAMPLE);
-    const newHtmlString = documentToHtmlString(htmlNodes);
-    expect(newHtmlString).toEqual(CISION_EXAMPLE);
-  });*/
-
   it("Parse HTML string to Contentful Rich Text", () => {
     const htmlNodes = htmlStringToDocument(htmlString);
     const newHtmlString = documentToHtmlString(htmlNodes);
@@ -68,13 +56,12 @@ describe("Parse HTML string to Contentful Document", () => {
   });
 
   it("Handles a simple convert option from 'div' to 'paragraph'", () => {
-    const divToParagraphConverter: TagConverter = (node, next) => {
-      const paragraph: Block = {
+    const divToParagraphConverter: TagConverter<Block> = (node, next) => {
+      return {
         nodeType: BLOCKS.PARAGRAPH,
-        content: getAsList(next(node)) as Array<Block | Inline | Text>,
+        content: next(node),
         data: {},
       };
-      return paragraph;
     };
     const matchText = "This is text in a div";
     const htmlNodes = htmlStringToDocument(`<div>${matchText}</div>`, {
@@ -91,5 +78,38 @@ describe("Parse HTML string to Contentful Document", () => {
     expect(htmlNodes).toMatchObject(
       createDocumentNode([matchNode as TopLevelBlock])
     );
+  });
+
+  it("Handles a complex convert option from 'span' with bold class to 'paragraph' and 'bold' mark", () => {
+    const styledSpanToMarkedParagraphConverter: TagConverter<Block> = (
+      node,
+      next
+    ) => {
+      const isBold = node.attrs.class === "bold";
+      const marks = isBold ? ({ type: "bold" } satisfies Mark) : undefined;
+      return {
+        nodeType: BLOCKS.PARAGRAPH,
+        content: next(node, marks),
+        data: {},
+      };
+    };
+    const matchText = "text";
+    const htmlNodes = htmlStringToDocument(
+      `<span class="bold">${matchText}</span>`,
+      {
+        convertTag: {
+          span: styledSpanToMarkedParagraphConverter,
+        },
+      }
+    );
+
+    const matchNode = createDocumentNode([
+      helpers.createBlock(
+        BLOCKS.PARAGRAPH,
+        helpers.createText(matchText, { type: "bold" })
+      ),
+    ] as TopLevelBlock[]);
+
+    expect(htmlNodes).toMatchObject(matchNode);
   });
 });

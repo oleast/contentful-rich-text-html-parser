@@ -1,10 +1,5 @@
-import {
-  appendMarksToChildren,
-  isBlockType,
-  isInlineType,
-  isMarkType,
-} from "./utils";
-import type { HTMLTagName, HTMLTextNode, TagConverter } from "./types";
+import { isBlockType, isInlineType, isMarkType } from "./utils";
+import type { HTMLTagName, TagConverter, TextConverter } from "./types";
 import {
   Block,
   BLOCKS,
@@ -12,7 +7,6 @@ import {
   INLINES,
   Mark,
   MARKS,
-  Text,
 } from "@contentful/rich-text-types";
 
 const DEFAULT_NODE_TYPE_FOR_HTML_TAG: Partial<
@@ -53,41 +47,38 @@ const getDefaultNodeTypeForHtmlTag = (
   return DEFAULT_NODE_TYPE_FOR_HTML_TAG[tagName];
 };
 
-export const convertTagToBlock: TagConverter = (node, next) => {
+export const convertTagToBlock: TagConverter<Block> = (node, next) => {
   const nodeType = getDefaultNodeTypeForHtmlTag(node.tagName);
   if (!nodeType || !isBlockType(nodeType)) {
     return [];
   }
-  const block: Block = {
+  return {
     nodeType,
-    content: next(node) as Array<Block | Inline | Text>,
+    content: next(node),
     data: {},
   };
-  return block;
 };
 
-export const convertTagToInline: TagConverter = (node, next) => {
+export const convertTagToInline: TagConverter<Inline> = (node, next) => {
   const nodeType = getDefaultNodeTypeForHtmlTag(node.tagName);
   if (!nodeType || !isInlineType(nodeType)) {
     return [];
   }
-  const inline: Inline = {
+  return {
     nodeType,
-    content: next(node) as Array<Inline | Text>,
+    content: next(node),
     data: {},
   };
-  return inline;
 };
 
-export const convertTagToHyperlink: TagConverter = (node, next) => {
-  const inline: Inline = {
+export const convertTagToHyperlink: TagConverter<Inline> = (node, next) => {
+  return {
     nodeType: INLINES.HYPERLINK,
-    content: next(node) as Array<Inline | Text>,
+    content: next(node),
     data: {
       uri: node.attrs.href,
     },
   };
-  return inline;
 };
 
 export const convertTagToMark: TagConverter = (node, next) => {
@@ -98,19 +89,18 @@ export const convertTagToMark: TagConverter = (node, next) => {
   const mark: Mark = {
     type: nodeType,
   };
-  return appendMarksToChildren(mark, node, next);
+  return next(node, mark);
 };
 
-export const convertTagToChildren: TagConverter = (node, next) => {
+export const convertTagToChildren: TagConverter<Block> = (node, next) => {
   return next(node);
 };
 
-export const convertTextNodeToText = (node: HTMLTextNode): Text => {
-  const textNode: Text = {
+export const convertTextNodeToText: TextConverter = (node, marks) => {
+  return {
     nodeType: "text",
-    marks: [],
+    marks,
     value: node.value,
     data: {},
   };
-  return textNode;
 };
