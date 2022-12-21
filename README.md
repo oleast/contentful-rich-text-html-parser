@@ -69,7 +69,66 @@ The default configuration supports the following list of HTML tags which by defa
 
 This library can be configured to support custom HTML structures to fit your needs by using a custom `options`-object.
 
-### Example 1: Change all "div" elements to "p" elements
+```typescript
+import {
+  htmlStringToDocument,
+  Options,
+  TagConverter,
+} from "contentful-rich-text-html-parser";
+
+const myConverter: TagConverter = (node, next) => {
+  // My converter logic here...
+};
+
+const options: Options = {
+  convertTag: {
+    "any-html-tag-name-here": myConverter,
+  },
+};
+
+htmlStringToDocument(htmlString, options);
+```
+
+### Writing custom converter functions
+
+Custom converters can be written as functions taking two arguments:
+
+- The `node`-object which represents the current HTML element.
+- The `next`-function which continues converting the child nodes of the HTML element.
+
+The converter function should return a Contentful rich text node or a list of nodes.
+
+```typescript
+import { BLOCKS } from "@contentful/rich-text-types";
+
+const converter = (node, next) => ({
+  nodeType: BLOCKS.PARAGRAPH,
+  content: next(node),
+  data: {},
+});
+```
+
+Adding marks can be done by passing them to the `next`-function. Marks can be added as either a single mark or an array of marks.
+
+```typescript
+import { BLOCKS } from "@contentful/rich-text-types";
+
+const converter = (node, next) => ({
+  nodeType: BLOCKS.PARAGRAPH,
+  content: next(node, { type: "bold" }),
+  data: {},
+});
+```
+
+Skipping an element can be done by returning the result of the `next`-function. Ignoring an element AND its' children can be done by just returning an empty array. **Skipping is the default behavior of any tag that is not supported.**
+
+```typescript
+const skippingConverter = (node, next) => next(node);
+
+const ignoringConverter = (node, next) => [];
+```
+
+### Example: Change all "div" elements to "p" elements
 
 ```typescript
 import { Block, BLOCKS } from "@contentful/rich-text-types";
@@ -114,7 +173,7 @@ htmlStringToDocument(htmlString, options);
 // };
 ```
 
-### Example 2: use a CSS class name to add a mark
+### Example: Use a CSS class name to add a mark
 
 ```typescript
 import { Inline, Mark } from "@contentful/rich-text-types";
@@ -170,7 +229,7 @@ It is however possible to add a `convertTag` option to configure support for the
 
 **It is however important to note that you would have to find your own way of converting these images to valid assets that could be uploaded to Contentful if that is your goal"**
 
-### Example 3: Custom "img" converter
+### Example: Custom "img" converter
 
 ```typescript
 import { Block, BLOCKS } from "@contentful/rich-text-types";
