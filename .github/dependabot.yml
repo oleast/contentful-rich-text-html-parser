@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    reviewers:
+      - "oleast"
+    labels:
+      - "dependabot"
+      - "dependencies"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Berlin"
+    commit-message:
+      prefix: "fix(dependabot): "
+      prefix-development: "chore(dependabot-dev): "
