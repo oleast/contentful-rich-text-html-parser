@@ -18,7 +18,20 @@
     "url": "https://github.com/oleast/contentful-rich-text-html-parser"
   },
   "bugs": "https://github.com/oleast/contentful-rich-text-html-parser/issues",
-  "main": "./dist/index.js",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/es/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/es/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./converters": {
+      "types": "./dist/types/converters.d.ts",
+      "import": "./dist/es/converters.js",
+      "require": "./dist/cjs/converters.js"
+    }
+  },
   "types": "./dist/types/index.d.ts",
   "sideEffects": false,
   "files": [
@@ -26,7 +39,7 @@
   ],
   "scripts": {
     "lint": "prettier --check ./src",
-    "build": "tsc --project tsconfig.build.json",
+    "build": "tsc --project tsconfig.build.json && tsc --project tsconfig.module.json",
     "test": "vitest run",
     "test:watch": "vitest watch"
   },
