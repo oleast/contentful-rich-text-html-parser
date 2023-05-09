@@ -54,7 +54,7 @@
     "prettier": "^2.8.1",
     "semantic-release": "^21.0.0",
     "typescript": "^5.0.2",
-    "vitest": "^0.30.0"
+    "vitest": "^0.31.0"
   },
   "dependencies": {
     "@contentful/rich-text-types": "^16.0.2",
