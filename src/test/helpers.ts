@@ -12,7 +12,7 @@ export const createText = (value: string, marks?: Mark | Mark[]): Text => {
 
 export const createBlock = (
   nodeType: BLOCKS,
-  content: Text | Block | Inline | Array<Text | Block | Inline>
+  content: Text | Block | Inline | Array<Text | Block | Inline>,
 ): Block => {
   return {
     nodeType,

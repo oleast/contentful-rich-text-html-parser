@@ -56,7 +56,7 @@ const DEFAULT_TAG_CONVERTERS: Partial<
 const mapHtmlNodeToRichTextNode = (
   node: HTMLNode,
   marks: Mark[],
-  options: OptionsWithDefaults
+  options: OptionsWithDefaults,
 ) => {
   const { convertText, convertTag } = options;
   if (node.type === "text") {
@@ -68,7 +68,7 @@ const mapHtmlNodeToRichTextNode = (
     const allMarks = newMarks.concat(marks);
     if (node.type === "element") {
       return node.children.flatMap((child) =>
-        mapHtmlNodeToRichTextNode(child, allMarks, options)
+        mapHtmlNodeToRichTextNode(child, allMarks, options),
       );
     }
     return getAsList(mapHtmlNodeToRichTextNode(node, allMarks, options));
@@ -85,7 +85,7 @@ const mapHtmlNodeToRichTextNode = (
 
 export const htmlStringToDocument = (
   htmlString: string,
-  options: Options = {}
+  options: Options = {},
 ): Document => {
   const optionsWithDefaults: OptionsWithDefaults = {
     convertTag: {
@@ -96,7 +96,7 @@ export const htmlStringToDocument = (
   };
   const parsedHtml = parseHtml(htmlString);
   const richTextNodes = parsedHtml.flatMap((node) =>
-    mapHtmlNodeToRichTextNode(node, [], optionsWithDefaults)
+    mapHtmlNodeToRichTextNode(node, [], optionsWithDefaults),
   );
   return createDocumentNode(richTextNodes as TopLevelBlock[]);
 };
