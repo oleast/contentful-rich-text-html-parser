@@ -39,6 +39,7 @@
   ],
   "scripts": {
     "lint": "prettier --check ./src",
+    "lint:fix": "prettier --write ./src",
     "build": "tsc --project tsconfig.build.json && tsc --project tsconfig.module.json",
     "test": "vitest run",
     "test:watch": "vitest watch"
@@ -51,7 +52,7 @@
     "@semantic-release/npm": "^10.0.2",
     "@semantic-release/release-notes-generator": "^11.0.1",
     "conventional-changelog-conventionalcommits": "^6.1.0",
-    "prettier": "^2.8.1",
+    "prettier": "^3.0.0",
     "semantic-release": "^21.0.0",
     "typescript": "^5.0.2",
     "vitest": "^0.33.0"

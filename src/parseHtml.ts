@@ -23,7 +23,7 @@ const isChildNodeTemplate = (childNode: ChildNode): childNode is Template => {
 };
 
 const isChildNodeDocumentType = (
-  childNode: ChildNode
+  childNode: ChildNode,
 ): childNode is DocumentType => {
   return childNode.nodeName === "#documentType";
 };
@@ -50,7 +50,7 @@ const mapChildNodeToHtmlNode = (childNode: ChildNode): HTMLNode | null => {
       .map((c) => mapChildNodeToHtmlNode(c))
       .filter(isNotNull),
     attrs: Object.fromEntries(
-      childNode.attrs.map((attr) => [attr.name, attr.value])
+      childNode.attrs.map((attr) => [attr.name, attr.value]),
     ),
   };
 };

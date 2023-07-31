@@ -42,7 +42,7 @@ const DEFAULT_NODE_TYPE_FOR_HTML_TAG: Partial<
 };
 
 const getDefaultNodeTypeForHtmlTag = (
-  tagName: HTMLTagName
+  tagName: HTMLTagName,
 ): BLOCKS | MARKS | INLINES | undefined => {
   return DEFAULT_NODE_TYPE_FOR_HTML_TAG[tagName];
 };

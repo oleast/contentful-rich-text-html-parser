@@ -72,18 +72,18 @@ describe("Parse HTML string to Contentful Document", () => {
 
     const matchNode = helpers.createBlock(
       BLOCKS.PARAGRAPH,
-      helpers.createText(matchText)
+      helpers.createText(matchText),
     );
 
     expect(htmlNodes).toMatchObject(
-      createDocumentNode([matchNode as TopLevelBlock])
+      createDocumentNode([matchNode as TopLevelBlock]),
     );
   });
 
   it("Handles a complex convert option from 'span' with bold class to 'paragraph' and 'bold' mark", () => {
     const styledSpanToMarkedParagraphConverter: TagConverter<Block> = (
       node,
-      next
+      next,
     ) => {
       const isBold = node.attrs.class === "bold";
       const marks = isBold ? ({ type: "bold" } satisfies Mark) : undefined;
@@ -100,13 +100,13 @@ describe("Parse HTML string to Contentful Document", () => {
         convertTag: {
           span: styledSpanToMarkedParagraphConverter,
         },
-      }
+      },
     );
 
     const matchNode = createDocumentNode([
       helpers.createBlock(
         BLOCKS.PARAGRAPH,
-        helpers.createText(matchText, { type: "bold" })
+        helpers.createText(matchText, { type: "bold" }),
       ),
     ] as TopLevelBlock[]);
 

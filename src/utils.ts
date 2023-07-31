@@ -22,13 +22,13 @@ export const getAsList = <T>(value: T | T[]): T[] => {
 };
 
 export const isBlockType = (
-  nodeType: BLOCKS | MARKS | INLINES
+  nodeType: BLOCKS | MARKS | INLINES,
 ): nodeType is BLOCKS => BLOCK_TYPES.includes(nodeType as BLOCKS);
 export const isInlineType = (
-  nodeType: BLOCKS | MARKS | INLINES
+  nodeType: BLOCKS | MARKS | INLINES,
 ): nodeType is INLINES => INLINE_TYPES.includes(nodeType as INLINES);
 export const isMarkType = (
-  nodeType: BLOCKS | MARKS | INLINES
+  nodeType: BLOCKS | MARKS | INLINES,
 ): nodeType is MARKS => MARK_TYPES.includes(nodeType as MARKS);
 
 export const isNodeTypeMark = (node: Node | Text | Mark): node is Mark => {
@@ -47,7 +47,7 @@ export const isNodeTypeText = (node: Node | Text | Mark): node is Text => {
 
 export const createDocumentNode = (
   content: TopLevelBlock[],
-  data: NodeData = {}
+  data: NodeData = {},
 ): Document => ({
   nodeType: BLOCKS.DOCUMENT,
   data,

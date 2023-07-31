@@ -41,16 +41,16 @@ export type ConverterResult<TNodeType extends AnyContentfulNode> =
 export type Next<TNodeType extends AnyContentfulNode = Block | Inline | Text> =
   (
     node: HTMLNode,
-    marks?: Mark | Mark[]
+    marks?: Mark | Mark[],
   ) => Array<ContentfulNodeContent<TNodeType>>;
 
 export type TextConverter = (node: HTMLTextNode, marks: Mark[]) => Text;
 
 export type TagConverter<
-  TNodeType extends AnyContentfulNode = Block | Inline | Text
+  TNodeType extends AnyContentfulNode = Block | Inline | Text,
 > = (
   node: HTMLElementNode,
-  next: Next<TNodeType>
+  next: Next<TNodeType>,
 ) => ConverterResult<TNodeType>;
 
 export type ConvertTagOptions = Record<HTMLTagName | string, TagConverter>;
