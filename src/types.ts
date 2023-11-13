@@ -26,12 +26,12 @@ export type ContentfulNodeContent<TNodeType extends AnyContentfulNode> =
   TNodeType extends Block
     ? Block["content"][0]
     : TNodeType extends Inline
-    ? Inline["content"][0]
-    : TNodeType extends Mark
-    ? Block["content"][0]
-    : TNodeType extends Text
-    ? Text
-    : never;
+      ? Inline["content"][0]
+      : TNodeType extends Mark
+        ? Block["content"][0]
+        : TNodeType extends Text
+          ? Text
+          : never;
 
 export type AnyContentfulNode = Node | Mark | Text;
 export type ConverterResult<TNodeType extends AnyContentfulNode> =
