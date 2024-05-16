@@ -32,7 +32,7 @@ jobs:
       - name: Build
         run: npm run build
 
-      - uses: codfish/semantic-release-action@v2
+      - uses: codfish/semantic-release-action@v3
         id: semantic-release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
