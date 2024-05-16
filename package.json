@@ -45,20 +45,20 @@
     "test:watch": "vitest watch"
   },
   "devDependencies": {
-    "@contentful/rich-text-html-renderer": "^16.0.2",
+    "@contentful/rich-text-html-renderer": "^16.3.5",
     "@semantic-release/commit-analyzer": "^12.0.0",
     "@semantic-release/git": "^10.0.1",
-    "@semantic-release/github": "^10.0.2",
-    "@semantic-release/npm": "^12.0.0",
+    "@semantic-release/github": "^10.0.4",
+    "@semantic-release/npm": "^12.0.1",
     "@semantic-release/release-notes-generator": "^13.0.0",
     "conventional-changelog-conventionalcommits": "^8.0.0",
-    "prettier": "^3.1.0",
-    "semantic-release": "^23.0.0",
-    "typescript": "^5.3.3",
-    "vitest": "^1.2.0"
+    "prettier": "^3.2.5",
+    "semantic-release": "^23.1.1",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
   },
   "dependencies": {
-    "@contentful/rich-text-types": "^16.3.0",
+    "@contentful/rich-text-types": "^16.3.5",
     "parse5": "^7.1.2"
   }
 }
