@@ -1,4 +1,12 @@
-import { Block, BLOCKS, Inline, Mark, Text } from "@contentful/rich-text-types";
+import {
+  Block,
+  BLOCKS,
+  Inline,
+  Mark,
+  Text,
+  TopLevelBlock,
+  TopLevelBlockEnum,
+} from "@contentful/rich-text-types";
 import { getAsList } from "../utils";
 
 export const createText = (value: string, marks?: Mark | Mark[]): Text => {
