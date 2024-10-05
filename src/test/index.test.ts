@@ -112,4 +112,84 @@ describe("Parse HTML string to Contentful Document", () => {
 
     expect(htmlNodes).toMatchObject(matchNode);
   });
+
+  it("converts an invalid top level text node to a paragraph node", () => {
+    expect(
+      htmlStringToDocument("<div>Text under top level div</div>"),
+    ).toMatchObject({
+      content: [
+        {
+          data: {},
+          nodeType: BLOCKS.PARAGRAPH,
+          content: [
+            {
+              data: {},
+              marks: [],
+              nodeType: "text",
+              value: "Text under top level div",
+            },
+          ],
+        },
+      ],
+      data: {},
+      nodeType: "document",
+    });
+  });
+
+  it("handles a combination of valid top level nodes and top level text nodes.", () => {
+    expect(
+      htmlStringToDocument(
+        "Some unwrapped text prefixing a p tag." +
+          "<p>Paragraph content <span>I am a text node</span></p>" +
+          "Some unwrapped text suffixing a p tag",
+      ),
+    ).toMatchObject({
+      content: [
+        {
+          data: {},
+          nodeType: BLOCKS.PARAGRAPH,
+          content: [
+            {
+              data: {},
+              marks: [],
+              nodeType: "text",
+              value: "Some unwrapped text prefixing a p tag.",
+            },
+          ],
+        },
+        {
+          data: {},
+          nodeType: BLOCKS.PARAGRAPH,
+          content: [
+            {
+              data: {},
+              marks: [],
+              nodeType: "text",
+              value: "Paragraph content ",
+            },
+            {
+              data: {},
+              marks: [],
+              nodeType: "text",
+              value: "I am a text node",
+            },
+          ],
+        },
+        {
+          data: {},
+          nodeType: BLOCKS.PARAGRAPH,
+          content: [
+            {
+              data: {},
+              marks: [],
+              nodeType: "text",
+              value: "Some unwrapped text suffixing a p tag",
+            },
+          ],
+        },
+      ],
+      data: {},
+      nodeType: "document",
+    });
+  });
 });
