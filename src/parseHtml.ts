@@ -6,7 +6,7 @@ import {
   TextNode,
   CommentNode,
 } from "parse5/dist/tree-adapters/default";
-import { isNotNull } from "./utils";
+import { isNotNull, isWhiteSpace } from "./utils";
 
 import type { HTMLNode, HTMLTagName } from "./types";
 
@@ -28,6 +28,10 @@ const isChildNodeDocumentType = (
   return childNode.nodeName === "#documentType";
 };
 
+const isTextNodePureWhiteSpace = (textNode: TextNode): boolean => {
+  return isWhiteSpace(textNode.value);
+}
+
 const mapChildNodeToHtmlNode = (childNode: ChildNode): HTMLNode | null => {
   if (
     isChildNodeComment(childNode) ||
@@ -37,6 +41,9 @@ const mapChildNodeToHtmlNode = (childNode: ChildNode): HTMLNode | null => {
     return null;
   }
   if (isChildNodeTextNode(childNode)) {
+    if (isTextNodePureWhiteSpace(childNode)) {
+      return null;
+    }
     return {
       type: "text",
       value: childNode.value,

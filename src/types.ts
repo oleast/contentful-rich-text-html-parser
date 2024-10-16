@@ -58,6 +58,9 @@ export type ConvertTagOptions = Record<HTMLTagName | string, TagConverter>;
 export interface OptionsWithDefaults {
   convertTag: ConvertTagOptions;
   convertText: TextConverter;
+  wrapTopLevelTextNodesInParagraphs: boolean;
+  ignoreWhiteSpace: boolean;
+  isWhiteSpace: (content: string) => boolean;
 }
 
 export type Options = Partial<OptionsWithDefaults>;

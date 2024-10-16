@@ -104,3 +104,14 @@ export const convertTextNodeToText: TextConverter = (node, marks) => {
     data: {},
   };
 };
+
+export const convertTextNodeToParagraphedText: TagConverter<Block> = (
+  node,
+  next,
+) => {
+  return {
+    nodeType: BLOCKS.PARAGRAPH,
+    data: {},
+    content: next(node),
+  };
+};

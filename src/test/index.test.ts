@@ -72,18 +72,18 @@ describe("Parse HTML string to Contentful Document", () => {
 
     const matchNode = helpers.createBlock(
       BLOCKS.PARAGRAPH,
-      helpers.createText(matchText),
+      helpers.createText(matchText)
     );
 
     expect(htmlNodes).toMatchObject(
-      createDocumentNode([matchNode as TopLevelBlock]),
+      createDocumentNode([matchNode as TopLevelBlock])
     );
   });
 
   it("Handles a complex convert option from 'span' with bold class to 'paragraph' and 'bold' mark", () => {
     const styledSpanToMarkedParagraphConverter: TagConverter<Block> = (
       node,
-      next,
+      next
     ) => {
       const isBold = node.attrs.class === "bold";
       const marks = isBold ? ({ type: "bold" } satisfies Mark) : undefined;
@@ -100,13 +100,13 @@ describe("Parse HTML string to Contentful Document", () => {
         convertTag: {
           span: styledSpanToMarkedParagraphConverter,
         },
-      },
+      }
     );
 
     const matchNode = createDocumentNode([
       helpers.createBlock(
         BLOCKS.PARAGRAPH,
-        helpers.createText(matchText, { type: "bold" }),
+        helpers.createText(matchText, { type: "bold" })
       ),
     ] as TopLevelBlock[]);
 
@@ -115,7 +115,7 @@ describe("Parse HTML string to Contentful Document", () => {
 
   it("converts an invalid top level text node to a paragraph node", () => {
     expect(
-      htmlStringToDocument("<div>Text under top level div</div>"),
+      htmlStringToDocument("<div>Text under top level div</div>")
     ).toMatchObject({
       content: [
         {
@@ -141,8 +141,8 @@ describe("Parse HTML string to Contentful Document", () => {
       htmlStringToDocument(
         "Some unwrapped text prefixing a p tag." +
           "<p>Paragraph content <span>I am a text node</span></p>" +
-          "Some unwrapped text suffixing a p tag",
-      ),
+          "Some unwrapped text suffixing a p tag"
+      )
     ).toMatchObject({
       content: [
         {
@@ -191,5 +191,48 @@ describe("Parse HTML string to Contentful Document", () => {
       data: {},
       nodeType: "document",
     });
+  });
+
+  it("Handles text nodes with only whitespace by ingoring them", () => {
+    const html = `<h2>Heading on the first line</h2>\n\n<p>Text on the third line.</p>`;
+
+    const htmlNodes = htmlStringToDocument(html, {
+      ignoreWhiteSpace: true,
+    });
+
+    const matchNode = createDocumentNode([
+      helpers.createBlock(
+        BLOCKS.HEADING_2,
+        helpers.createText("Heading on the first line")
+      ),
+      helpers.createBlock(
+        BLOCKS.PARAGRAPH,
+        helpers.createText("Text on the third line.")
+      ),
+    ] as TopLevelBlock[]);
+
+    expect(htmlNodes).toMatchObject(matchNode);
+  });
+
+  it("Handles text nodes with only whitespace by including them", () => {
+    const html = `<h2>Heading on the first line</h2>\n\n<p>Text on the third line.</p>`;
+
+    const htmlNodes = htmlStringToDocument(html, {
+      ignoreWhiteSpace: false,
+    });
+
+    const matchNode = createDocumentNode([
+      helpers.createBlock(
+        BLOCKS.HEADING_2,
+        helpers.createText("Heading on the first line")
+      ),
+      helpers.createText("\n\n"),
+      helpers.createBlock(
+        BLOCKS.PARAGRAPH,
+        helpers.createText("Text on the third line.")
+      ),
+    ] as TopLevelBlock[]);
+
+    expect(htmlNodes).toMatchObject(matchNode);
   });
 });

@@ -14,6 +14,8 @@ import { MARK_TYPES, INLINE_TYPES, BLOCK_TYPES } from "./constants";
 export const isNotNull = <T>(value: T): value is Exclude<T, null> =>
   value !== null;
 
+export const isWhiteSpace = (content: string): boolean => /^\s*$/.test(content);
+
 export const getAsList = <T>(value: T | T[]): T[] => {
   if (Array.isArray(value)) {
     return value;
