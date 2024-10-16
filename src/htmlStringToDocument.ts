@@ -13,16 +13,20 @@ import {
   Text,
   Inline,
   Block,
+  BLOCKS,
 } from "@contentful/rich-text-types";
 import type {
+  HTMLElementNode,
   HTMLNode,
   HTMLTagName,
+  HTMLTextNode,
   Next,
   Options,
   OptionsWithDefaults,
   TagConverter,
+  TextConverter,
 } from "./types";
-import { createDocumentNode, getAsList } from "./utils";
+import { createDocumentNode, getAsList, isWhiteSpace } from "./utils";
 
 const DEFAULT_TAG_CONVERTERS: Partial<
   Record<HTMLTagName, TagConverter<Block | Inline | Text>>
@@ -57,11 +61,9 @@ const mapHtmlNodeToRichTextNode = (
   node: HTMLNode,
   marks: Mark[],
   options: OptionsWithDefaults,
+  isTopLevel = false,
 ) => {
   const { convertText, convertTag } = options;
-  if (node.type === "text") {
-    return convertText(node, marks);
-  }
 
   const mapChildren: Next = (node, mark) => {
     const newMarks = mark ? getAsList(mark) : [];
@@ -73,10 +75,11 @@ const mapHtmlNodeToRichTextNode = (
     }
     return getAsList(mapHtmlNodeToRichTextNode(node, allMarks, options));
   };
+  const next = mapChildren;
 
-  const next: Next = (node, marks) => {
-    return mapChildren(node, marks);
-  };
+  if (node.type === "text") {
+    return convertText(node, marks);
+  }
 
   const tagConverter = convertTag?.[node.tagName] ?? convertTagToChildren;
   const convertedNode = tagConverter(node, next);
@@ -93,10 +96,13 @@ export const htmlStringToDocument = (
       ...options.convertTag,
     },
     convertText: options.convertText ?? convertTextNodeToText,
+    wrapTopLevelTextNodesInParagraphs: false,
+    ignoreWhiteSpace: false,
+    isWhiteSpace: options.isWhiteSpace ?? isWhiteSpace,
   };
   const parsedHtml = parseHtml(htmlString);
   const richTextNodes = parsedHtml.flatMap((node) =>
-    mapHtmlNodeToRichTextNode(node, [], optionsWithDefaults),
+    mapHtmlNodeToRichTextNode(node, [], optionsWithDefaults, true),
   );
   return createDocumentNode(richTextNodes as TopLevelBlock[]);
 };

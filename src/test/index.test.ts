@@ -112,4 +112,49 @@ describe("Parse HTML string to Contentful Document", () => {
 
     expect(htmlNodes).toMatchObject(matchNode);
   });
+
+  it("Handles text nodes with only whitespace by ingoring them", () => {
+    const html = 
+`<h2>Heading on the first line</h2>\n\n<p>Text on the third line.</p>`;
+
+    const htmlNodes = htmlStringToDocument(
+      html,
+      {
+        ignoreWhiteSpace: true,
+      },
+    );
+
+    const matchNode = createDocumentNode([
+      helpers.createBlock(
+        BLOCKS.HEADING_2,
+        helpers.createText("Heading on the first line"),
+      ),
+      helpers.createBlock(BLOCKS.PARAGRAPH, helpers.createText("Text on the third line."))
+    ] as TopLevelBlock[]);
+
+    expect(htmlNodes).toMatchObject(matchNode);
+  });
+
+  it("Handles text nodes with only whitespace by including them", () => {
+    const html = 
+`<h2>Heading on the first line</h2>\n\n<p>Text on the third line.</p>`;
+
+    const htmlNodes = htmlStringToDocument(
+      html,
+      {
+        ignoreWhiteSpace: false,
+      },
+    );
+
+    const matchNode = createDocumentNode([
+      helpers.createBlock(
+        BLOCKS.HEADING_2,
+        helpers.createText("Heading on the first line"),
+      ),
+      helpers.createText("\n\n"),
+      helpers.createBlock(BLOCKS.PARAGRAPH, helpers.createText("Text on the third line."))
+    ] as TopLevelBlock[]);
+
+    expect(htmlNodes).toMatchObject(matchNode);
+  });
 });
