@@ -45,7 +45,7 @@
     "test:watch": "vitest watch"
   },
   "devDependencies": {
-    "@contentful/rich-text-html-renderer": "^16.3.5",
+    "@contentful/rich-text-html-renderer": "^17.0.0",
     "@semantic-release/commit-analyzer": "^13.0.0",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^11.0.0",
