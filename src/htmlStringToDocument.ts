@@ -13,6 +13,7 @@ import {
   Text,
   Inline,
   Block,
+  BLOCKS,
 } from "@contentful/rich-text-types";
 import type {
   HTMLNode,
@@ -98,5 +99,26 @@ export const htmlStringToDocument = (
   const richTextNodes = parsedHtml.flatMap((node) =>
     mapHtmlNodeToRichTextNode(node, [], optionsWithDefaults),
   );
-  return createDocumentNode(richTextNodes as TopLevelBlock[]);
+
+  const richTextNodesWithTopLevelTextNodesConverted: TopLevelBlock[] =
+    richTextNodes.map((node) => {
+      if (node.nodeType === "text") {
+        return {
+          data: {},
+          nodeType: BLOCKS.PARAGRAPH,
+          content: [
+            {
+              ...node,
+              nodeType: "text",
+            },
+          ],
+        };
+      }
+
+      //TODO: Remove this type assertion.
+      // Other possible non-top level blocks are: LIST_ITEM, TABLE_ROW, TABLE_CELL and TABLE_HEADER_CELL
+      return node as TopLevelBlock;
+    });
+
+  return createDocumentNode(richTextNodesWithTopLevelTextNodesConverted);
 };
