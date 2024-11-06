@@ -3,9 +3,10 @@ import { documentToHtmlString } from "@contentful/rich-text-html-renderer";
 import {
   Block,
   BLOCKS,
-  Document,
+  INLINES,
   Mark,
   TopLevelBlock,
+  validateRichTextDocument,
 } from "@contentful/rich-text-types";
 import { htmlStringToDocument } from "../htmlStringToDocument";
 
@@ -14,47 +15,18 @@ import { EXAMPLE_RICH_TEXT } from "./example";
 import { createDocumentNode } from "../utils";
 import * as helpers from "./helpers";
 
-// https://www.contentful.com/developers/docs/tutorials/general/getting-started-with-rich-text-field-type/
-const richTextDocument: Document = {
-  nodeType: BLOCKS.DOCUMENT,
-  data: {},
-  content: [
-    {
-      nodeType: BLOCKS.PARAGRAPH,
-      content: [
-        {
-          nodeType: "text",
-          marks: [],
-          value: "I am an odd paragraph.",
-          data: {},
-        },
-      ],
-      data: {},
-    },
-    {
-      nodeType: BLOCKS.PARAGRAPH,
-      content: [
-        {
-          nodeType: "text",
-          marks: [],
-          value: "I am even.",
-          data: {},
-        },
-      ],
-      data: {},
-    },
-  ],
-};
-
 const htmlString = documentToHtmlString(EXAMPLE_RICH_TEXT);
 
 describe("Parse HTML string to Contentful Document", () => {
-  it("Parse HTML string to Contentful Rich Text", () => {
+  it("Parse HTML string to Contentful Rich Text and back again", () => {
     const htmlNodes = htmlStringToDocument(htmlString);
     const newHtmlString = documentToHtmlString(htmlNodes);
     expect(newHtmlString).toEqual(htmlString);
+    expect(validateRichTextDocument(htmlNodes).length).toEqual(0);
   });
+});
 
+describe("Parse with custom converter functions", () => {
   it("Handles a simple convert option from 'div' to 'paragraph'", () => {
     const divToParagraphConverter: TagConverter<Block> = (node, next) => {
       return {
@@ -72,18 +44,19 @@ describe("Parse HTML string to Contentful Document", () => {
 
     const matchNode = helpers.createBlock(
       BLOCKS.PARAGRAPH,
-      helpers.createText(matchText)
+      helpers.createText(matchText),
     );
 
     expect(htmlNodes).toMatchObject(
-      createDocumentNode([matchNode as TopLevelBlock])
+      createDocumentNode([matchNode as TopLevelBlock]),
     );
+    expect(validateRichTextDocument(htmlNodes).length).toEqual(0);
   });
 
   it("Handles a complex convert option from 'span' with bold class to 'paragraph' and 'bold' mark", () => {
     const styledSpanToMarkedParagraphConverter: TagConverter<Block> = (
       node,
-      next
+      next,
     ) => {
       const isBold = node.attrs.class === "bold";
       const marks = isBold ? ({ type: "bold" } satisfies Mark) : undefined;
@@ -100,100 +73,144 @@ describe("Parse HTML string to Contentful Document", () => {
         convertTag: {
           span: styledSpanToMarkedParagraphConverter,
         },
-      }
+      },
     );
 
     const matchNode = createDocumentNode([
       helpers.createBlock(
         BLOCKS.PARAGRAPH,
-        helpers.createText(matchText, { type: "bold" })
+        helpers.createText(matchText, { type: "bold" }),
       ),
     ] as TopLevelBlock[]);
 
     expect(htmlNodes).toMatchObject(matchNode);
+    expect(validateRichTextDocument(htmlNodes).length).toEqual(0);
+  });
+});
+
+describe("Processing top level inline nodes to valid formats", () => {
+  it("Keeps an invalid top level inline node by default", () => {
+    const htmlNodes = htmlStringToDocument(
+      `<a href="http://example.com">Top level hyperlink</a>`,
+    );
+    const matchNode = createDocumentNode([
+      helpers.createInline(
+        INLINES.HYPERLINK,
+        helpers.createText("Top level hyperlink"),
+        { uri: "http://example.com" },
+      ),
+    ] as unknown as TopLevelBlock[]);
+
+    expect(htmlNodes).toMatchObject(matchNode);
+    expect(validateRichTextDocument(htmlNodes).length).toEqual(1);
   });
 
-  it("converts an invalid top level text node to a paragraph node", () => {
-    expect(
-      htmlStringToDocument("<div>Text under top level div</div>")
-    ).toMatchObject({
-      content: [
-        {
-          data: {},
-          nodeType: BLOCKS.PARAGRAPH,
-          content: [
-            {
-              data: {},
-              marks: [],
-              nodeType: "text",
-              value: "Text under top level div",
-            },
-          ],
-        },
-      ],
-      data: {},
-      nodeType: "document",
-    });
+  it("Removes an invalid top level inline node", () => {
+    const htmlNodes = htmlStringToDocument(
+      `<a href="http://example.com">Top level hyperlink</a>`,
+      { handleTopLevelInlines: "remove" },
+    );
+    const matchNode = createDocumentNode([] as TopLevelBlock[]);
+
+    expect(htmlNodes).toMatchObject(matchNode);
+    expect(validateRichTextDocument(htmlNodes).length).toEqual(0);
   });
 
-  it("handles a combination of valid top level nodes and top level text nodes.", () => {
-    expect(
-      htmlStringToDocument(
-        "Some unwrapped text prefixing a p tag." +
-          "<p>Paragraph content <span>I am a text node</span></p>" +
-          "Some unwrapped text suffixing a p tag"
-      )
-    ).toMatchObject({
-      content: [
-        {
-          data: {},
-          nodeType: BLOCKS.PARAGRAPH,
-          content: [
-            {
-              data: {},
-              marks: [],
-              nodeType: "text",
-              value: "Some unwrapped text prefixing a p tag.",
-            },
-          ],
-        },
-        {
-          data: {},
-          nodeType: BLOCKS.PARAGRAPH,
-          content: [
-            {
-              data: {},
-              marks: [],
-              nodeType: "text",
-              value: "Paragraph content ",
-            },
-            {
-              data: {},
-              marks: [],
-              nodeType: "text",
-              value: "I am a text node",
-            },
-          ],
-        },
-        {
-          data: {},
-          nodeType: BLOCKS.PARAGRAPH,
-          content: [
-            {
-              data: {},
-              marks: [],
-              nodeType: "text",
-              value: "Some unwrapped text suffixing a p tag",
-            },
-          ],
-        },
-      ],
-      data: {},
-      nodeType: "document",
-    });
+  it("Wraps an invalid top level inline node in a paragraph", () => {
+    const htmlNodes = htmlStringToDocument(
+      `<a href="http://example.com">Top level hyperlink</a>`,
+      { handleTopLevelInlines: "wrap-paragraph" },
+    );
+    const matchNode = createDocumentNode([
+      helpers.createBlock(
+        BLOCKS.PARAGRAPH,
+        helpers.createInline(
+          INLINES.HYPERLINK,
+          helpers.createText("Top level hyperlink"),
+          { uri: "http://example.com" },
+        ),
+      ),
+    ] as TopLevelBlock[]);
+
+    expect(htmlNodes).toMatchObject(matchNode);
+    expect(validateRichTextDocument(htmlNodes).length).toEqual(0);
+  });
+});
+
+describe("Processing top level text nodes to valid formats", () => {
+  it("Keeps an invalid top level text node by default", () => {
+    const htmlNodes = htmlStringToDocument(
+      "<div>Text under top level div</div>",
+    );
+    const matchNode = createDocumentNode([
+      helpers.createText(
+        "Text under top level div",
+      ) as unknown as TopLevelBlock,
+    ] as TopLevelBlock[]);
+
+    expect(htmlNodes).toMatchObject(matchNode);
+    expect(validateRichTextDocument(htmlNodes).length).toEqual(1);
   });
 
-  it("Handles text nodes with only whitespace by ingoring them", () => {
+  it("Converts an invalid top level text node to a paragraph node", () => {
+    const htmlNodes = htmlStringToDocument(
+      "<div>Text under top level div</div>",
+      {
+        handleTopLevelText: "wrap-paragraph",
+      },
+    );
+    const matchNode = createDocumentNode([
+      helpers.createBlock(
+        BLOCKS.PARAGRAPH,
+        helpers.createText("Text under top level div"),
+      ),
+    ] as TopLevelBlock[]);
+
+    expect(htmlNodes).toMatchObject(matchNode);
+    expect(validateRichTextDocument(htmlNodes).length).toEqual(0);
+  });
+
+  it("Removes an invalid top level text node", () => {
+    const htmlNodes = htmlStringToDocument(
+      "<div>Text under top level div</div>",
+      { handleTopLevelText: "remove" },
+    );
+    const matchNode = createDocumentNode([] as TopLevelBlock[]);
+
+    expect(htmlNodes).toMatchObject(matchNode);
+    expect(validateRichTextDocument(htmlNodes).length).toEqual(0);
+  });
+
+  it("Handles a combination of valid top level nodes and top level text nodes.", () => {
+    const htmlNodes = htmlStringToDocument(
+      "Some unwrapped text prefixing a p tag." +
+        "<p>Paragraph content <span>I am a text node</span></p>" +
+        "Some unwrapped text suffixing a p tag",
+      { handleTopLevelText: "wrap-paragraph" },
+    );
+
+    const matchNode = createDocumentNode([
+      helpers.createBlock(
+        BLOCKS.PARAGRAPH,
+        helpers.createText("Some unwrapped text prefixing a p tag."),
+      ),
+      helpers.createBlock(BLOCKS.PARAGRAPH, [
+        helpers.createText("Paragraph content "),
+        helpers.createText("I am a text node"),
+      ]),
+      helpers.createBlock(
+        BLOCKS.PARAGRAPH,
+        helpers.createText("Some unwrapped text suffixing a p tag"),
+      ),
+    ] as TopLevelBlock[]);
+
+    expect(htmlNodes).toMatchObject(matchNode);
+    expect(validateRichTextDocument(htmlNodes).length).toEqual(0);
+  });
+});
+
+describe("Parsing options for whitespace", () => {
+  it("Handles text nodes with only whitespace by ignoring them", () => {
     const html = `<h2>Heading on the first line</h2>\n\n<p>Text on the third line.</p>`;
 
     const htmlNodes = htmlStringToDocument(html, {
@@ -203,15 +220,16 @@ describe("Parse HTML string to Contentful Document", () => {
     const matchNode = createDocumentNode([
       helpers.createBlock(
         BLOCKS.HEADING_2,
-        helpers.createText("Heading on the first line")
+        helpers.createText("Heading on the first line"),
       ),
       helpers.createBlock(
         BLOCKS.PARAGRAPH,
-        helpers.createText("Text on the third line.")
+        helpers.createText("Text on the third line."),
       ),
     ] as TopLevelBlock[]);
 
     expect(htmlNodes).toMatchObject(matchNode);
+    expect(validateRichTextDocument(htmlNodes).length).toEqual(0);
   });
 
   it("Handles text nodes with only whitespace by including them", () => {
@@ -224,15 +242,43 @@ describe("Parse HTML string to Contentful Document", () => {
     const matchNode = createDocumentNode([
       helpers.createBlock(
         BLOCKS.HEADING_2,
-        helpers.createText("Heading on the first line")
+        helpers.createText("Heading on the first line"),
       ),
       helpers.createText("\n\n"),
       helpers.createBlock(
         BLOCKS.PARAGRAPH,
-        helpers.createText("Text on the third line.")
+        helpers.createText("Text on the third line."),
       ),
     ] as TopLevelBlock[]);
 
     expect(htmlNodes).toMatchObject(matchNode);
+    expect(validateRichTextDocument(htmlNodes).length).toEqual(1);
+    expect(validateRichTextDocument(htmlNodes)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          details: "Value must be one of expected values",
+          expected: [
+            "blockquote",
+            "embedded-asset-block",
+            "embedded-entry-block",
+            "embedded-resource-block",
+            "heading-1",
+            "heading-2",
+            "heading-3",
+            "heading-4",
+            "heading-5",
+            "heading-6",
+            "hr",
+            "ordered-list",
+            "paragraph",
+            "table",
+            "unordered-list",
+          ],
+          name: "in",
+          path: ["content", 1, "nodeType"],
+          value: "text",
+        }),
+      ]),
+    );
   });
 });

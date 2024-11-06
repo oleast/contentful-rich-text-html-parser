@@ -55,12 +55,15 @@ export type TagConverter<
 
 export type ConvertTagOptions = Record<HTMLTagName | string, TagConverter>;
 
+export type HandleTopLevelText = "preserve" | "remove" | "wrap-paragraph";
+export type HandleTopLevelInlines = "preserve" | "remove" | "wrap-paragraph";
+
 export interface OptionsWithDefaults {
   convertTag: ConvertTagOptions;
   convertText: TextConverter;
-  wrapTopLevelTextNodesInParagraphs: boolean;
+  handleTopLevelInlines: HandleTopLevelInlines;
+  handleTopLevelText: HandleTopLevelText;
   ignoreWhiteSpace: boolean;
-  isWhiteSpace: (content: string) => boolean;
 }
 
 export type Options = Partial<OptionsWithDefaults>;

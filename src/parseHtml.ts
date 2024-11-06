@@ -10,6 +10,10 @@ import { isNotNull, isWhiteSpace } from "./utils";
 
 import type { HTMLNode, HTMLTagName } from "./types";
 
+export interface ParserOptions {
+  ignoreWhiteSpace: boolean;
+}
+
 const isChildNodeComment = (childNode: ChildNode): childNode is CommentNode => {
   return childNode.nodeName === "#comment";
 };
@@ -30,9 +34,12 @@ const isChildNodeDocumentType = (
 
 const isTextNodePureWhiteSpace = (textNode: TextNode): boolean => {
   return isWhiteSpace(textNode.value);
-}
+};
 
-const mapChildNodeToHtmlNode = (childNode: ChildNode): HTMLNode | null => {
+const mapChildNodeToHtmlNode = (
+  childNode: ChildNode,
+  options: ParserOptions,
+): HTMLNode | null => {
   if (
     isChildNodeComment(childNode) ||
     isChildNodeDocumentType(childNode) ||
@@ -41,7 +48,7 @@ const mapChildNodeToHtmlNode = (childNode: ChildNode): HTMLNode | null => {
     return null;
   }
   if (isChildNodeTextNode(childNode)) {
-    if (isTextNodePureWhiteSpace(childNode)) {
+    if (options.ignoreWhiteSpace && isTextNodePureWhiteSpace(childNode)) {
       return null;
     }
     return {
@@ -54,7 +61,7 @@ const mapChildNodeToHtmlNode = (childNode: ChildNode): HTMLNode | null => {
     type: "element",
     tagName: childNode.tagName as HTMLTagName,
     children: childNode.childNodes
-      .map((c) => mapChildNodeToHtmlNode(c))
+      .map((c) => mapChildNodeToHtmlNode(c, options))
       .filter(isNotNull),
     attrs: Object.fromEntries(
       childNode.attrs.map((attr) => [attr.name, attr.value]),
@@ -62,9 +69,12 @@ const mapChildNodeToHtmlNode = (childNode: ChildNode): HTMLNode | null => {
   };
 };
 
-export const parseHtml = (htmlString: string): HTMLNode[] => {
+export const parseHtml = (
+  htmlString: string,
+  options: ParserOptions,
+): HTMLNode[] => {
   const parsedHtml = parseFragment(htmlString);
   return parsedHtml.childNodes
-    .map((node) => mapChildNodeToHtmlNode(node))
+    .map((node) => mapChildNodeToHtmlNode(node, options))
     .filter(isNotNull);
 };

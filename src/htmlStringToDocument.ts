@@ -5,28 +5,24 @@ import {
   convertTextNodeToText,
   convertTagToChildren,
 } from "./converters";
-import { parseHtml } from "./parseHtml";
+import { parseHtml, ParserOptions } from "./parseHtml";
 import {
-  TopLevelBlock,
   Document,
   Mark,
   Text,
   Inline,
   Block,
-  BLOCKS,
 } from "@contentful/rich-text-types";
 import type {
-  HTMLElementNode,
   HTMLNode,
   HTMLTagName,
-  HTMLTextNode,
   Next,
   Options,
   OptionsWithDefaults,
   TagConverter,
-  TextConverter,
 } from "./types";
-import { createDocumentNode, getAsList, isWhiteSpace } from "./utils";
+import { createDocumentNode, getAsList, isNotNull } from "./utils";
+import { processConvertedNodesFromTopLevel } from "./processConvertedNodesFromTopLevel";
 
 const DEFAULT_TAG_CONVERTERS: Partial<
   Record<HTMLTagName, TagConverter<Block | Inline | Text>>
@@ -61,7 +57,6 @@ const mapHtmlNodeToRichTextNode = (
   node: HTMLNode,
   marks: Mark[],
   options: OptionsWithDefaults,
-  isTopLevel = false,
 ) => {
   const { convertText, convertTag } = options;
 
@@ -96,34 +91,22 @@ export const htmlStringToDocument = (
       ...options.convertTag,
     },
     convertText: options.convertText ?? convertTextNodeToText,
-    wrapTopLevelTextNodesInParagraphs: false,
-    ignoreWhiteSpace: false,
-    isWhiteSpace: options.isWhiteSpace ?? isWhiteSpace,
+    handleTopLevelInlines: options.handleTopLevelInlines ?? "preserve",
+    handleTopLevelText: options.handleTopLevelText ?? "preserve",
+    ignoreWhiteSpace: options.ignoreWhiteSpace ?? false,
   };
-  const parsedHtml = parseHtml(htmlString);
+
+  const parserOptions: ParserOptions = {
+    ignoreWhiteSpace: optionsWithDefaults.ignoreWhiteSpace,
+  };
+
+  const parsedHtml = parseHtml(htmlString, parserOptions);
   const richTextNodes = parsedHtml.flatMap((node) =>
-    mapHtmlNodeToRichTextNode(node, [], optionsWithDefaults, true),
+    mapHtmlNodeToRichTextNode(node, [], optionsWithDefaults),
   );
+  const processedRichTextNodes = richTextNodes
+    .map((node) => processConvertedNodesFromTopLevel(node, optionsWithDefaults))
+    .filter(isNotNull);
 
-  const richTextNodesWithTopLevelTextNodesConverted: TopLevelBlock[] =
-    richTextNodes.map((node) => {
-      if (node.nodeType === "text") {
-        return {
-          data: {},
-          nodeType: BLOCKS.PARAGRAPH,
-          content: [
-            {
-              ...node,
-              nodeType: "text",
-            },
-          ],
-        };
-      }
-
-      //TODO: Remove this type assertion.
-      // Other possible non-top level blocks are: LIST_ITEM, TABLE_ROW, TABLE_CELL and TABLE_HEADER_CELL
-      return node as TopLevelBlock;
-    });
-
-  return createDocumentNode(richTextNodesWithTopLevelTextNodesConverted);
+  return createDocumentNode(processedRichTextNodes);
 };
