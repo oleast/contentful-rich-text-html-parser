@@ -91,13 +91,21 @@ export const htmlStringToDocument = (
       ...options.convertTag,
     },
     convertText: options.convertText ?? convertTextNodeToText,
-    handleTopLevelInlines: options.handleTopLevelInlines ?? "preserve",
-    handleTopLevelText: options.handleTopLevelText ?? "preserve",
-    ignoreWhiteSpace: options.ignoreWhiteSpace ?? false,
+    parserOptions: {
+      handleWhitespaceNodes:
+        options?.parserOptions?.handleWhitespaceNodes ?? "preserve",
+    },
+    postProcessing: {
+      handleTopLevelInlines:
+        options?.postProcessing?.handleTopLevelInlines ?? "preserve",
+      handleTopLevelText:
+        options?.postProcessing?.handleTopLevelText ?? "preserve",
+    },
   };
 
   const parserOptions: ParserOptions = {
-    ignoreWhiteSpace: optionsWithDefaults.ignoreWhiteSpace,
+    ignoreWhiteSpace:
+      optionsWithDefaults.parserOptions.handleWhitespaceNodes == "remove",
   };
 
   const parsedHtml = parseHtml(htmlString, parserOptions);

@@ -29,10 +29,10 @@ export const processConvertedNodesFromTopLevel = (
     return node as unknown as TopLevelBlock;
   }
   if (isNodeTypeInline(node)) {
-    if (options.handleTopLevelInlines === "remove") {
+    if (options.postProcessing.handleTopLevelInlines === "remove") {
       return null;
     }
-    if (options.handleTopLevelInlines === "wrap-paragraph") {
+    if (options.postProcessing.handleTopLevelInlines === "wrap-paragraph") {
       return {
         nodeType: BLOCKS.PARAGRAPH,
         data: {},
@@ -42,10 +42,10 @@ export const processConvertedNodesFromTopLevel = (
     return node as unknown as TopLevelBlock;
   }
   if (isNodeTypeText(node)) {
-    if (options.handleTopLevelText === "remove") {
+    if (options.postProcessing.handleTopLevelText === "remove") {
       return null;
     }
-    if (options.handleTopLevelText === "wrap-paragraph") {
+    if (options.postProcessing.handleTopLevelText === "wrap-paragraph") {
       return {
         nodeType: BLOCKS.PARAGRAPH,
         data: {},

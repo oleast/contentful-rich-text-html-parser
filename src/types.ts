@@ -55,15 +55,29 @@ export type TagConverter<
 
 export type ConvertTagOptions = Record<HTMLTagName | string, TagConverter>;
 
+export type HandleWhitespaceNodes = "preserve" | "remove";
 export type HandleTopLevelText = "preserve" | "remove" | "wrap-paragraph";
 export type HandleTopLevelInlines = "preserve" | "remove" | "wrap-paragraph";
+
+export interface ParserOptions {
+  handleWhitespaceNodes: HandleWhitespaceNodes;
+}
+
+export interface PostProcessingOptions {
+  handleTopLevelInlines: HandleTopLevelInlines;
+  handleTopLevelText: HandleTopLevelText;
+}
 
 export interface OptionsWithDefaults {
   convertTag: ConvertTagOptions;
   convertText: TextConverter;
-  handleTopLevelInlines: HandleTopLevelInlines;
-  handleTopLevelText: HandleTopLevelText;
-  ignoreWhiteSpace: boolean;
+  parserOptions: ParserOptions;
+  postProcessing: PostProcessingOptions;
 }
 
-export type Options = Partial<OptionsWithDefaults>;
+export type Options = Partial<
+  Omit<OptionsWithDefaults, "parserOptions" | "postProcessing"> & {
+    parserOptions: Partial<ParserOptions>;
+    postProcessing: Partial<PostProcessingOptions>;
+  }
+>;

@@ -108,7 +108,9 @@ describe("Processing top level inline nodes to valid formats", () => {
   it("Removes an invalid top level inline node", () => {
     const htmlNodes = htmlStringToDocument(
       `<a href="http://example.com">Top level hyperlink</a>`,
-      { handleTopLevelInlines: "remove" },
+      {
+        postProcessing: { handleTopLevelInlines: "remove" },
+      },
     );
     const matchNode = createDocumentNode([] as TopLevelBlock[]);
 
@@ -119,7 +121,9 @@ describe("Processing top level inline nodes to valid formats", () => {
   it("Wraps an invalid top level inline node in a paragraph", () => {
     const htmlNodes = htmlStringToDocument(
       `<a href="http://example.com">Top level hyperlink</a>`,
-      { handleTopLevelInlines: "wrap-paragraph" },
+      {
+        postProcessing: { handleTopLevelInlines: "wrap-paragraph" },
+      },
     );
     const matchNode = createDocumentNode([
       helpers.createBlock(
@@ -156,7 +160,7 @@ describe("Processing top level text nodes to valid formats", () => {
     const htmlNodes = htmlStringToDocument(
       "<div>Text under top level div</div>",
       {
-        handleTopLevelText: "wrap-paragraph",
+        postProcessing: { handleTopLevelText: "wrap-paragraph" },
       },
     );
     const matchNode = createDocumentNode([
@@ -173,7 +177,9 @@ describe("Processing top level text nodes to valid formats", () => {
   it("Removes an invalid top level text node", () => {
     const htmlNodes = htmlStringToDocument(
       "<div>Text under top level div</div>",
-      { handleTopLevelText: "remove" },
+      {
+        postProcessing: { handleTopLevelText: "remove" },
+      },
     );
     const matchNode = createDocumentNode([] as TopLevelBlock[]);
 
@@ -186,7 +192,9 @@ describe("Processing top level text nodes to valid formats", () => {
       "Some unwrapped text prefixing a p tag." +
         "<p>Paragraph content <span>I am a text node</span></p>" +
         "Some unwrapped text suffixing a p tag",
-      { handleTopLevelText: "wrap-paragraph" },
+      {
+        postProcessing: { handleTopLevelText: "wrap-paragraph" },
+      },
     );
 
     const matchNode = createDocumentNode([
@@ -210,11 +218,13 @@ describe("Processing top level text nodes to valid formats", () => {
 });
 
 describe("Parsing options for whitespace", () => {
-  it("Handles text nodes with only whitespace by ignoring them", () => {
+  it("Handles text nodes with only whitespace by removing them", () => {
     const html = `<h2>Heading on the first line</h2>\n\n<p>Text on the third line.</p>`;
 
     const htmlNodes = htmlStringToDocument(html, {
-      ignoreWhiteSpace: true,
+      parserOptions: {
+        handleWhitespaceNodes: "remove",
+      },
     });
 
     const matchNode = createDocumentNode([
@@ -232,11 +242,13 @@ describe("Parsing options for whitespace", () => {
     expect(validateRichTextDocument(htmlNodes).length).toEqual(0);
   });
 
-  it("Handles text nodes with only whitespace by including them", () => {
+  it("Handles text nodes with only whitespace by preserving them", () => {
     const html = `<h2>Heading on the first line</h2>\n\n<p>Text on the third line.</p>`;
 
     const htmlNodes = htmlStringToDocument(html, {
-      ignoreWhiteSpace: false,
+      parserOptions: {
+        handleWhitespaceNodes: "preserve",
+      },
     });
 
     const matchNode = createDocumentNode([
