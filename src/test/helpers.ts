@@ -1,4 +1,11 @@
-import { Block, BLOCKS, Inline, Mark, Text } from "@contentful/rich-text-types";
+import {
+  Block,
+  BLOCKS,
+  Inline,
+  INLINES,
+  Mark,
+  Text,
+} from "@contentful/rich-text-types";
 import { getAsList } from "../utils";
 
 export const createText = (value: string, marks?: Mark | Mark[]): Text => {
@@ -18,5 +25,17 @@ export const createBlock = (
     nodeType,
     content: getAsList(content),
     data: {},
+  };
+};
+
+export const createInline = (
+  nodeType: INLINES,
+  content: Text | Inline | Array<Text | Inline>,
+  data: { [key: string]: string } = {},
+): Inline => {
+  return {
+    nodeType,
+    content: getAsList(content),
+    data,
   };
 };

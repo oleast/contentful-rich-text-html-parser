@@ -270,3 +270,67 @@ htmlStringToDocument(htmlString, options);
 //   ],
 // };
 ```
+
+## invalid Rich Text Documents
+
+The Contentful Rich Text format requires the `Document` adhere to a specific format.
+The full ruleset can be found in the [Contentful Documentation](https://www.contentful.com/developers/docs/concepts/rich-text/#rules-of-rich-text).
+
+By default this library will convert any HTML node by node to create a rich text document. This means that the result can be an invalid document.
+
+Uploading an invalid document to Contentful will result in an error. The `@contentful/rich-text-types` package from Contentful includes a `validateRichTextDocument` as of version `17.0.0`.
+
+**To mitigate invalid documents you have a few options:**
+
+- Use the built in `parserOptions` and/or `postProcessing` options. (Currently useful for removing whitespace, and fixing top level nodes).
+- Add a custom `TagConverter` og `TextConverter` that handles your case. (To handle cases like wrong child elements of `Inline` nodes, list elements, or tables).
+- Change your HTML to a valid format before converting it.
+
+### Handling invalid top level nodes
+
+Some elements can not be at the top level of a `Document`. This includes `Text`-nodes, `Inline`-nodes, `li`-elements, and any child element of `table` (like a `tr` or `td`).
+
+To handle cases where this appears this library includes a few utilities that process document after it has been created.
+
+These options are:
+
+- `options.postProcessing.handleTopLevelText: "preserve" | "remove" | "wrap-paragraph"`. Default: `"preserve"`.
+- `options.postProcessing.handleTopLevelInlines: "preserve" | "remove" | "wrap-paragraph"`. Default: `"preserve"`.
+
+Examples of usage:
+
+```typescript
+const htmlNodes = htmlStringToDocument(html, {
+  postProcessing: {
+    handleTopLevelText: "wrap-paragraph",
+    handleTopLevelInlines: "remove",
+  },
+});
+```
+
+How it works:
+
+- `"preserve"`: Keep top level nodes as they are, even if it results in an invalid `Document`.
+- `"remove"`: Remove the node with all its child nodes from the document.
+- `"wrap-paragraph"`: Wrap the node in a simple `paragraph`-node to make it valid.
+
+### Handling extra whitespace nodes
+
+A formatted HTML string might include whitespace that will be parsed and added to the document output. This can result in unwanted text nodes or an invalid document.
+
+Whitespace can be removed by using the `handleWhitespaceNodes` option.
+
+- `optons.parserOptions.handleWhitespaceNodes: "preserve" | "remove"`. Default: `"preserve"`.
+
+```typescript
+const htmlNodes = htmlStringToDocument(html, {
+  parserOptions: {
+    handleWhitespaceNodes: "preserve",
+  },
+});
+```
+
+How it works:
+
+- `"preserve"`: Keep all whitespace text nodes as they are in the original html string.
+- `"remove"`: Remove any text node that consist purely of whitespace from the HTML node tree. Uses the following Regex `/^\s*$/`.

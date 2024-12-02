@@ -5,9 +5,8 @@ import {
   convertTextNodeToText,
   convertTagToChildren,
 } from "./converters";
-import { parseHtml } from "./parseHtml";
+import { parseHtml, ParserOptions } from "./parseHtml";
 import {
-  TopLevelBlock,
   Document,
   Mark,
   Text,
@@ -22,7 +21,8 @@ import type {
   OptionsWithDefaults,
   TagConverter,
 } from "./types";
-import { createDocumentNode, getAsList } from "./utils";
+import { createDocumentNode, getAsList, isNotNull } from "./utils";
+import { processConvertedNodesFromTopLevel } from "./processConvertedNodesFromTopLevel";
 
 const DEFAULT_TAG_CONVERTERS: Partial<
   Record<HTMLTagName, TagConverter<Block | Inline | Text>>
@@ -59,9 +59,6 @@ const mapHtmlNodeToRichTextNode = (
   options: OptionsWithDefaults,
 ) => {
   const { convertText, convertTag } = options;
-  if (node.type === "text") {
-    return convertText(node, marks);
-  }
 
   const mapChildren: Next = (node, mark) => {
     const newMarks = mark ? getAsList(mark) : [];
@@ -73,10 +70,11 @@ const mapHtmlNodeToRichTextNode = (
     }
     return getAsList(mapHtmlNodeToRichTextNode(node, allMarks, options));
   };
+  const next = mapChildren;
 
-  const next: Next = (node, marks) => {
-    return mapChildren(node, marks);
-  };
+  if (node.type === "text") {
+    return convertText(node, marks);
+  }
 
   const tagConverter = convertTag?.[node.tagName] ?? convertTagToChildren;
   const convertedNode = tagConverter(node, next);
@@ -93,10 +91,30 @@ export const htmlStringToDocument = (
       ...options.convertTag,
     },
     convertText: options.convertText ?? convertTextNodeToText,
+    parserOptions: {
+      handleWhitespaceNodes:
+        options?.parserOptions?.handleWhitespaceNodes ?? "preserve",
+    },
+    postProcessing: {
+      handleTopLevelInlines:
+        options?.postProcessing?.handleTopLevelInlines ?? "preserve",
+      handleTopLevelText:
+        options?.postProcessing?.handleTopLevelText ?? "preserve",
+    },
   };
-  const parsedHtml = parseHtml(htmlString);
+
+  const parserOptions: ParserOptions = {
+    ignoreWhiteSpace:
+      optionsWithDefaults.parserOptions.handleWhitespaceNodes == "remove",
+  };
+
+  const parsedHtml = parseHtml(htmlString, parserOptions);
   const richTextNodes = parsedHtml.flatMap((node) =>
     mapHtmlNodeToRichTextNode(node, [], optionsWithDefaults),
   );
-  return createDocumentNode(richTextNodes as TopLevelBlock[]);
+  const processedRichTextNodes = richTextNodes
+    .map((node) => processConvertedNodesFromTopLevel(node, optionsWithDefaults))
+    .filter(isNotNull);
+
+  return createDocumentNode(processedRichTextNodes);
 };
