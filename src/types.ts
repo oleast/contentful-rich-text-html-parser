@@ -70,6 +70,7 @@ export interface PostProcessingOptions {
 
 export interface OptionsWithDefaults {
   convertTag: ConvertTagOptions;
+  defaultTagConverter: TagConverter;
   convertText: TextConverter;
   parserOptions: ParserOptions;
   postProcessing: PostProcessingOptions;

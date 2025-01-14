@@ -58,7 +58,7 @@ const mapHtmlNodeToRichTextNode = (
   marks: Mark[],
   options: OptionsWithDefaults,
 ) => {
-  const { convertText, convertTag } = options;
+  const { convertText, convertTag, defaultTagConverter } = options;
 
   const mapChildren: Next = (node, mark) => {
     const newMarks = mark ? getAsList(mark) : [];
@@ -76,7 +76,7 @@ const mapHtmlNodeToRichTextNode = (
     return convertText(node, marks);
   }
 
-  const tagConverter = convertTag?.[node.tagName] ?? convertTagToChildren;
+  const tagConverter = convertTag[node.tagName] ?? defaultTagConverter;
   const convertedNode = tagConverter(node, next);
   return convertedNode;
 };
@@ -90,6 +90,7 @@ export const htmlStringToDocument = (
       ...DEFAULT_TAG_CONVERTERS,
       ...options.convertTag,
     },
+    defaultTagConverter: options.defaultTagConverter ?? convertTagToChildren,
     convertText: options.convertText ?? convertTextNodeToText,
     parserOptions: {
       handleWhitespaceNodes:
