@@ -120,12 +120,38 @@ const converter = (node, next) => ({
 });
 ```
 
-Skipping an element can be done by returning the result of the `next`-function. Ignoring an element AND its' children can be done by just returning an empty array. **Skipping is the default behavior of any tag that is not supported.**
+Skipping an element can be done by returning the result of the `next`-function. Ignoring an element AND its' children can be done by just returning an empty array.
 
 ```typescript
 const skippingConverter = (node, next) => next(node);
 
 const ignoringConverter = (node, next) => [];
+```
+
+### Unsupported tags
+
+Skipping an element is the default behavior of any tag that is not supported. However, this can be overridden as follows:
+
+```typescript
+import {
+  DEFAULT_TAG_CONVERTER,
+  htmlStringToDocument,
+  Options,
+  TagConverter,
+} from "contentful-rich-text-html-parser";
+
+const defaultConverter: TagConverter = (node, next) => {
+  console.log(`Unsupported tag: ${node.tagName}`);
+  return next(node); // skip element
+};
+
+const options: Options = {
+  convertTag: {
+    [DEFAULT_TAG_CONVERTER]: defaultConverter,
+  },
+};
+
+htmlStringToDocument(htmlString, options);
 ```
 
 ### Example: Change all "div" elements to "p" elements

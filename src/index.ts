@@ -1,4 +1,7 @@
-export { htmlStringToDocument } from "./htmlStringToDocument";
+export {
+  DEFAULT_TAG_CONVERTER,
+  htmlStringToDocument,
+} from "./htmlStringToDocument";
 export type {
   HTMLElementNode,
   HTMLNode,
