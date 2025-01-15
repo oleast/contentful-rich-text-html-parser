@@ -146,9 +146,7 @@ const logAndConvertTagToChildren: TagConverter = (node, next) => {
 };
 
 const options: Options = {
-  convertTag: {
-    [DEFAULT_TAG_CONVERTER]: defaultConverter,
-  },
+  defaultTagConverter: logAndConvertTagToChildren,
 };
 
 htmlStringToDocument(htmlString, options);
