@@ -134,15 +134,15 @@ Skipping an element is the default behavior of any tag that is not supported. Ho
 
 ```typescript
 import {
-  DEFAULT_TAG_CONVERTER,
   htmlStringToDocument,
   Options,
   TagConverter,
 } from "contentful-rich-text-html-parser";
+import { convertTagToChildren } from "contentful-rich-text-html-parser/converters";
 
-const defaultConverter: TagConverter = (node, next) => {
+const logAndConvertTagToChildren: TagConverter = (node, next) => {
   console.log(`Unsupported tag: ${node.tagName}`);
-  return next(node); // skip element
+  return convertTagToChildren(node, next); // skip element
 };
 
 const options: Options = {

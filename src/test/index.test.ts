@@ -8,10 +8,7 @@ import {
   TopLevelBlock,
   validateRichTextDocument,
 } from "@contentful/rich-text-types";
-import {
-  DEFAULT_TAG_CONVERTER,
-  htmlStringToDocument,
-} from "../htmlStringToDocument";
+import { htmlStringToDocument } from "../htmlStringToDocument";
 
 import { describe, expect, it } from "vitest";
 import { EXAMPLE_RICH_TEXT } from "./example";
@@ -107,7 +104,7 @@ describe("Parse unsupported tags", () => {
   });
 
   it("Uses default converter when specified", () => {
-    const defaultConverter: TagConverter<Block> = (node, next) => {
+    const toParagraphConverter: TagConverter<Block> = (node, next) => {
       return {
         nodeType: BLOCKS.PARAGRAPH,
         content: next(node),
@@ -118,9 +115,7 @@ describe("Parse unsupported tags", () => {
     const htmlNodes = htmlStringToDocument(
       `<custom-tag>${matchText}</custom-tag>`,
       {
-        convertTag: {
-          [DEFAULT_TAG_CONVERTER]: defaultConverter,
-        },
+        defaultTagConverter: toParagraphConverter,
       },
     );
 
@@ -129,7 +124,6 @@ describe("Parse unsupported tags", () => {
     ] as TopLevelBlock[]);
 
     expect(htmlNodes).toMatchObject(matchNode);
-    console.log(validateRichTextDocument(htmlNodes));
     expect(validateRichTextDocument(htmlNodes).length).toEqual(0);
   });
 });

@@ -24,8 +24,6 @@ import type {
 import { createDocumentNode, getAsList, isNotNull } from "./utils";
 import { processConvertedNodesFromTopLevel } from "./processConvertedNodesFromTopLevel";
 
-export const DEFAULT_TAG_CONVERTER = "4e6caacc-4f71-404e-9936-cbcef2aece9e";
-
 const DEFAULT_TAG_CONVERTERS: Partial<
   Record<HTMLTagName, TagConverter<Block | Inline | Text>>
 > = {
@@ -60,7 +58,7 @@ const mapHtmlNodeToRichTextNode = (
   marks: Mark[],
   options: OptionsWithDefaults,
 ) => {
-  const { convertText, convertTag } = options;
+  const { convertText, convertTag, defaultTagConverter } = options;
 
   const mapChildren: Next = (node, mark) => {
     const newMarks = mark ? getAsList(mark) : [];
@@ -78,10 +76,7 @@ const mapHtmlNodeToRichTextNode = (
     return convertText(node, marks);
   }
 
-  const tagConverter =
-    convertTag?.[node.tagName] ??
-    convertTag?.[DEFAULT_TAG_CONVERTER] ??
-    convertTagToChildren;
+  const tagConverter = convertTag[node.tagName] ?? defaultTagConverter;
   const convertedNode = tagConverter(node, next);
   return convertedNode;
 };
@@ -95,6 +90,7 @@ export const htmlStringToDocument = (
       ...DEFAULT_TAG_CONVERTERS,
       ...options.convertTag,
     },
+    defaultTagConverter: options.defaultTagConverter ?? convertTagToChildren,
     convertText: options.convertText ?? convertTextNodeToText,
     parserOptions: {
       handleWhitespaceNodes:
