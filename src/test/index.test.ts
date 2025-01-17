@@ -88,6 +88,46 @@ describe("Parse with custom converter functions", () => {
   });
 });
 
+describe("Parse unsupported tags", () => {
+  it("Skips element by default", () => {
+    const matchText = "This is text in a custom tag";
+    const htmlNodes = htmlStringToDocument(
+      `<p><custom-tag>${matchText}</custom-tag></p>`,
+    );
+
+    const matchNode = createDocumentNode([
+      helpers.createBlock(BLOCKS.PARAGRAPH, helpers.createText(matchText)),
+    ] as TopLevelBlock[]);
+
+    expect(htmlNodes).toMatchObject(matchNode);
+    expect(validateRichTextDocument(htmlNodes).length).toEqual(0);
+  });
+
+  it("Uses default converter when specified", () => {
+    const toParagraphConverter: TagConverter<Block> = (node, next) => {
+      return {
+        nodeType: BLOCKS.PARAGRAPH,
+        content: next(node),
+        data: {},
+      };
+    };
+    const matchText = "This is text in a custom tag";
+    const htmlNodes = htmlStringToDocument(
+      `<custom-tag>${matchText}</custom-tag>`,
+      {
+        defaultTagConverter: toParagraphConverter,
+      },
+    );
+
+    const matchNode = createDocumentNode([
+      helpers.createBlock(BLOCKS.PARAGRAPH, helpers.createText(matchText)),
+    ] as TopLevelBlock[]);
+
+    expect(htmlNodes).toMatchObject(matchNode);
+    expect(validateRichTextDocument(htmlNodes).length).toEqual(0);
+  });
+});
+
 describe("Processing top level inline nodes to valid formats", () => {
   it("Keeps an invalid top level inline node by default", () => {
     const htmlNodes = htmlStringToDocument(
