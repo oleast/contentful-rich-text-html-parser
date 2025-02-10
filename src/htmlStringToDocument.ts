@@ -47,6 +47,7 @@ const DEFAULT_TAG_CONVERTERS: Partial<
   strong: convertTagToMark,
   pre: convertTagToMark,
   i: convertTagToMark,
+  em: convertTagToMark,
   sub: convertTagToMark,
   sup: convertTagToMark,
   u: convertTagToMark,
