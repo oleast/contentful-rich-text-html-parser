@@ -43,8 +43,18 @@ export type Next<TNodeType extends AnyContentfulNode = Block | Inline | Text> =
     node: HTMLNode,
     marks?: Mark | Mark[],
   ) => Array<ContentfulNodeContent<TNodeType>>;
+export type AsyncNext<
+  TNodeType extends AnyContentfulNode = Block | Inline | Text,
+> = (
+  node: HTMLNode,
+  marks?: Mark | Mark[],
+) => MaybePromise<Array<ContentfulNodeContent<TNodeType>>>;
 
 export type TextConverter = (node: HTMLTextNode, marks: Mark[]) => Text;
+export type AsyncTextConverter = (
+  node: HTMLTextNode,
+  marks: Mark[],
+) => MaybePromise<Text>;
 
 export type TagConverter<
   TNodeType extends AnyContentfulNode = Block | Inline | Text,
@@ -52,8 +62,18 @@ export type TagConverter<
   node: HTMLElementNode,
   next: Next<TNodeType>,
 ) => ConverterResult<TNodeType>;
+export type AsyncTagConverter<
+  TNodeType extends AnyContentfulNode = Block | Inline | Text,
+> = (
+  node: HTMLElementNode,
+  next: AsyncNext<TNodeType>,
+) => MaybePromise<ConverterResult<TNodeType>>;
 
 export type ConvertTagOptions = Record<HTMLTagName | string, TagConverter>;
+export type AsyncConvertTagOptions = Record<
+  HTMLTagName | string,
+  AsyncTagConverter
+>;
 
 export type HandleWhitespaceNodes = "preserve" | "remove";
 export type HandleTopLevelText = "preserve" | "remove" | "wrap-paragraph";
@@ -68,17 +88,35 @@ export interface PostProcessingOptions {
   handleTopLevelText: HandleTopLevelText;
 }
 
-export interface OptionsWithDefaults {
+interface OptionsWithDefaultsBase<
+  ConvertTagOptions,
+  TagConverter,
+  TextConverter,
+> {
   convertTag: ConvertTagOptions;
   defaultTagConverter: TagConverter;
   convertText: TextConverter;
   parserOptions: ParserOptions;
   postProcessing: PostProcessingOptions;
 }
+export type OptionsWithDefaults = OptionsWithDefaultsBase<
+  ConvertTagOptions,
+  TagConverter,
+  TextConverter
+>;
+export type AsyncOptionsWithDefaults = OptionsWithDefaultsBase<
+  AsyncConvertTagOptions,
+  AsyncTagConverter,
+  AsyncTextConverter
+>;
 
-export type Options = Partial<
-  Omit<OptionsWithDefaults, "parserOptions" | "postProcessing"> & {
+type OptionsBase<T> = Partial<
+  Omit<T, "parserOptions" | "postProcessing"> & {
     parserOptions: Partial<ParserOptions>;
     postProcessing: Partial<PostProcessingOptions>;
   }
 >;
+export type Options = OptionsBase<OptionsWithDefaults>;
+export type AsyncOptions = OptionsBase<AsyncOptionsWithDefaults>;
+
+export type MaybePromise<T> = T | Promise<T>;

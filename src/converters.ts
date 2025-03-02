@@ -1,5 +1,15 @@
 import { isBlockType, isInlineType, isMarkType } from "./utils";
-import type { HTMLTagName, TagConverter, TextConverter } from "./types";
+import type {
+  AnyContentfulNode,
+  AsyncNext,
+  AsyncTagConverter,
+  AsyncTextConverter,
+  HTMLElementNode,
+  HTMLTagName,
+  Next,
+  TagConverter,
+  TextConverter,
+} from "./types";
 import {
   Block,
   BLOCKS,
@@ -47,41 +57,86 @@ const getDefaultNodeTypeForHtmlTag = (
   return DEFAULT_NODE_TYPE_FOR_HTML_TAG[tagName];
 };
 
-export const convertTagToBlock: TagConverter<Block> = (node, next) => {
-  const nodeType = getDefaultNodeTypeForHtmlTag(node.tagName);
-  if (!nodeType || !isBlockType(nodeType)) {
-    return [];
-  }
-  return {
-    nodeType,
-    content: next(node),
-    data: {},
+export function createConvertTagToBlock(async: false): TagConverter<Block>;
+export function createConvertTagToBlock(async: true): AsyncTagConverter<Block>;
+export function createConvertTagToBlock(
+  async: boolean,
+): TagConverter<Block> | AsyncTagConverter<Block> {
+  return (node: HTMLElementNode, next: Next<Block> | AsyncNext<Block>) => {
+    const nodeType = getDefaultNodeTypeForHtmlTag(node.tagName);
+    if (!nodeType || !isBlockType(nodeType)) {
+      return [];
+    }
+    return isSync(async, next)
+      ? {
+          nodeType,
+          content: next(node),
+          data: {},
+        }
+      : Promise.resolve(next(node)).then((content) => ({
+          nodeType,
+          content,
+          data: {},
+        }));
   };
-};
+}
 
-export const convertTagToInline: TagConverter<Inline> = (node, next) => {
-  const nodeType = getDefaultNodeTypeForHtmlTag(node.tagName);
-  if (!nodeType || !isInlineType(nodeType)) {
-    return [];
-  }
-  return {
-    nodeType,
-    content: next(node),
-    data: {},
+export function createConvertTagToInline(async: false): TagConverter<Inline>;
+export function createConvertTagToInline(
+  async: true,
+): AsyncTagConverter<Inline>;
+export function createConvertTagToInline(
+  async: boolean,
+): TagConverter<Inline> | AsyncTagConverter<Inline> {
+  return (node: HTMLElementNode, next: Next<Inline> | AsyncNext<Inline>) => {
+    const nodeType = getDefaultNodeTypeForHtmlTag(node.tagName);
+    if (!nodeType || !isInlineType(nodeType)) {
+      return [];
+    }
+    return isSync(async, next)
+      ? {
+          nodeType,
+          content: (next as Next<Inline>)(node),
+          data: {},
+        }
+      : Promise.resolve(next(node)).then((content) => ({
+          nodeType,
+          content,
+          data: {},
+        }));
   };
-};
+}
 
-export const convertTagToHyperlink: TagConverter<Inline> = (node, next) => {
-  return {
-    nodeType: INLINES.HYPERLINK,
-    content: next(node),
-    data: {
-      uri: node.attrs.href,
-    },
+export function createConvertTagToHyperlink(async: false): TagConverter<Inline>;
+export function createConvertTagToHyperlink(
+  async: true,
+): AsyncTagConverter<Inline>;
+export function createConvertTagToHyperlink(
+  async: boolean,
+): TagConverter<Inline> | AsyncTagConverter<Inline> {
+  return (node: HTMLElementNode, next: Next<Inline> | AsyncNext<Inline>) => {
+    return isSync(async, next)
+      ? {
+          nodeType: INLINES.HYPERLINK,
+          content: next(node),
+          data: {
+            uri: node.attrs.href,
+          },
+        }
+      : Promise.resolve(next(node)).then((content) => ({
+          nodeType: INLINES.HYPERLINK,
+          content,
+          data: {
+            uri: node.attrs.href,
+          },
+        }));
   };
-};
+}
 
-export const convertTagToMark: TagConverter = (node, next) => {
+export const convertTagToMark: TagConverter | AsyncTagConverter = (
+  node: HTMLElementNode,
+  next: Next | AsyncNext,
+) => {
   const nodeType = getDefaultNodeTypeForHtmlTag(node.tagName);
   if (!nodeType || !isMarkType(nodeType)) {
     return [];
@@ -92,11 +147,19 @@ export const convertTagToMark: TagConverter = (node, next) => {
   return next(node, mark);
 };
 
-export const convertTagToChildren: TagConverter<Block> = (node, next) => {
+export const convertTagToChildren:
+  | TagConverter<Block>
+  | AsyncTagConverter<Block> = (
+  node: HTMLElementNode,
+  next: Next<Block> | AsyncNext<Block>,
+) => {
   return next(node);
 };
 
-export const convertTextNodeToText: TextConverter = (node, marks) => {
+export const convertTextNodeToText: TextConverter | AsyncTextConverter = (
+  node,
+  marks,
+) => {
   return {
     nodeType: "text",
     marks,
@@ -105,13 +168,33 @@ export const convertTextNodeToText: TextConverter = (node, marks) => {
   };
 };
 
-export const convertTextNodeToParagraphedText: TagConverter<Block> = (
-  node,
-  next,
-) => {
-  return {
-    nodeType: BLOCKS.PARAGRAPH,
-    data: {},
-    content: next(node),
+export function createConvertTextNodeToParagraphedText(
+  async: false,
+): TagConverter<Block>;
+export function createConvertTextNodeToParagraphedText(
+  async: true,
+): AsyncTagConverter<Block>;
+export function createConvertTextNodeToParagraphedText(
+  async: boolean,
+): TagConverter<Block> | AsyncTagConverter<Block> {
+  return (node: HTMLElementNode, next: Next<Block> | AsyncNext<Block>) => {
+    return isSync(async, next)
+      ? {
+          nodeType: BLOCKS.PARAGRAPH,
+          data: {},
+          content: next(node),
+        }
+      : Promise.resolve(next(node)).then((content) => ({
+          nodeType: BLOCKS.PARAGRAPH,
+          data: {},
+          content,
+        }));
   };
-};
+}
+
+function isSync<T extends AnyContentfulNode>(
+  async: boolean,
+  next: Next<T> | AsyncNext<T>,
+): next is Next<T> {
+  return !async;
+}

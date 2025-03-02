@@ -5,7 +5,7 @@ import {
   Text,
   TopLevelBlock,
 } from "@contentful/rich-text-types";
-import type { OptionsWithDefaults } from "./types";
+import type { PostProcessingOptions } from "./types";
 import {
   isNodeTypeBlock,
   isNodeTypeInline,
@@ -15,7 +15,7 @@ import {
 
 export const processConvertedNodesFromTopLevel = (
   node: Block | Inline | Text,
-  options: OptionsWithDefaults,
+  options: PostProcessingOptions,
 ): TopLevelBlock | null => {
   if (isNodeTypeBlock(node)) {
     if (isNodeTypeTopLevelBlock(node)) {
@@ -29,10 +29,10 @@ export const processConvertedNodesFromTopLevel = (
     return node as unknown as TopLevelBlock;
   }
   if (isNodeTypeInline(node)) {
-    if (options.postProcessing.handleTopLevelInlines === "remove") {
+    if (options.handleTopLevelInlines === "remove") {
       return null;
     }
-    if (options.postProcessing.handleTopLevelInlines === "wrap-paragraph") {
+    if (options.handleTopLevelInlines === "wrap-paragraph") {
       return {
         nodeType: BLOCKS.PARAGRAPH,
         data: {},
@@ -42,10 +42,10 @@ export const processConvertedNodesFromTopLevel = (
     return node as unknown as TopLevelBlock;
   }
   if (isNodeTypeText(node)) {
-    if (options.postProcessing.handleTopLevelText === "remove") {
+    if (options.handleTopLevelText === "remove") {
       return null;
     }
-    if (options.postProcessing.handleTopLevelText === "wrap-paragraph") {
+    if (options.handleTopLevelText === "wrap-paragraph") {
       return {
         nodeType: BLOCKS.PARAGRAPH,
         data: {},
