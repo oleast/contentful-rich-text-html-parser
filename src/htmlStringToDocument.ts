@@ -1,10 +1,17 @@
 import {
+  convertTagToMark as convertTagToMarkAsync,
+  convertTagToBlock as convertTagToBlockAsync,
+  convertTagToHyperlink as convertTagToHyperlinkAsync,
+  convertTextNodeToText as convertTextNodeToTextAsync,
+  convertTagToChildren as convertTagToChildrenAsync,
+} from "./convertersAsync";
+import {
   convertTagToMark,
   convertTagToBlock,
   convertTagToHyperlink,
   convertTextNodeToText,
   convertTagToChildren,
-} from "./converters";
+} from "./convertersSync";
 import { parseHtml, ParserOptions } from "./parseHtml";
 import {
   Document,
@@ -14,8 +21,15 @@ import {
   Block,
 } from "@contentful/rich-text-types";
 import type {
+  AnyContentfulNode,
+  AsyncNext,
+  AsyncOptions,
+  AsyncOptionsWithDefaults,
+  AsyncTagConverter,
+  ConverterResult,
   HTMLNode,
   HTMLTagName,
+  MaybePromise,
   Next,
   Options,
   OptionsWithDefaults,
@@ -25,50 +39,91 @@ import { createDocumentNode, getAsList, isNotNull } from "./utils";
 import { processConvertedNodesFromTopLevel } from "./processConvertedNodesFromTopLevel";
 
 const DEFAULT_TAG_CONVERTERS: Partial<
-  Record<HTMLTagName, TagConverter<Block | Inline | Text>>
+  Record<
+    HTMLTagName,
+    [
+      TagConverter<Block | Inline | Text>,
+      AsyncTagConverter<Block | Inline | Text>,
+    ]
+  >
 > = {
-  h1: convertTagToBlock,
-  h2: convertTagToBlock,
-  h3: convertTagToBlock,
-  h4: convertTagToBlock,
-  h5: convertTagToBlock,
-  h6: convertTagToBlock,
-  hr: convertTagToBlock,
-  li: convertTagToBlock,
-  ol: convertTagToBlock,
-  p: convertTagToBlock,
-  blockquote: convertTagToBlock,
-  table: convertTagToBlock,
-  td: convertTagToBlock,
-  th: convertTagToBlock,
-  tr: convertTagToBlock,
-  ul: convertTagToBlock,
-  b: convertTagToMark,
-  strong: convertTagToMark,
-  pre: convertTagToMark,
-  i: convertTagToMark,
-  sub: convertTagToMark,
-  sup: convertTagToMark,
-  u: convertTagToMark,
-  a: convertTagToHyperlink,
+  h1: [convertTagToBlock, convertTagToBlockAsync],
+  h2: [convertTagToBlock, convertTagToBlockAsync],
+  h3: [convertTagToBlock, convertTagToBlockAsync],
+  h4: [convertTagToBlock, convertTagToBlockAsync],
+  h5: [convertTagToBlock, convertTagToBlockAsync],
+  h6: [convertTagToBlock, convertTagToBlockAsync],
+  hr: [convertTagToBlock, convertTagToBlockAsync],
+  li: [convertTagToBlock, convertTagToBlockAsync],
+  ol: [convertTagToBlock, convertTagToBlockAsync],
+  p: [convertTagToBlock, convertTagToBlockAsync],
+  blockquote: [convertTagToBlock, convertTagToBlockAsync],
+  table: [convertTagToBlock, convertTagToBlockAsync],
+  td: [convertTagToBlock, convertTagToBlockAsync],
+  th: [convertTagToBlock, convertTagToBlockAsync],
+  tr: [convertTagToBlock, convertTagToBlockAsync],
+  ul: [convertTagToBlock, convertTagToBlockAsync],
+  b: [convertTagToMark, convertTagToMarkAsync],
+  strong: [convertTagToMark, convertTagToMarkAsync],
+  pre: [convertTagToMark, convertTagToMarkAsync],
+  i: [convertTagToMark, convertTagToMarkAsync],
+  sub: [convertTagToMark, convertTagToMarkAsync],
+  sup: [convertTagToMark, convertTagToMarkAsync],
+  u: [convertTagToMark, convertTagToMarkAsync],
+  a: [convertTagToHyperlink, convertTagToHyperlinkAsync],
 };
+const DEFAULT_SYNC_TAG_CONVERTERS = Object.fromEntries(
+  Object.entries(DEFAULT_TAG_CONVERTERS).map(([tagName, [tagConverter]]) => [
+    tagName,
+    tagConverter,
+  ]),
+);
+const DEFAULT_ASYNC_TAG_CONVERTERS = Object.fromEntries(
+  Object.entries(DEFAULT_TAG_CONVERTERS).map(([tagName, [_, tagConverter]]) => [
+    tagName,
+    tagConverter,
+  ]),
+);
 
-const mapHtmlNodeToRichTextNode = (
+function mapHtmlNodeToRichTextNode(
+  async: false,
   node: HTMLNode,
   marks: Mark[],
   options: OptionsWithDefaults,
-) => {
+): ConverterResult<AnyContentfulNode>;
+function mapHtmlNodeToRichTextNode(
+  async: true,
+  node: HTMLNode,
+  marks: Mark[],
+  options: AsyncOptionsWithDefaults,
+): Promise<ConverterResult<AnyContentfulNode>>;
+function mapHtmlNodeToRichTextNode(
+  async: boolean,
+  node: HTMLNode,
+  marks: Mark[],
+  options: OptionsWithDefaults | AsyncOptionsWithDefaults,
+) {
   const { convertText, convertTag, defaultTagConverter } = options;
 
-  const mapChildren: Next = (node, mark) => {
+  const mapChildren: AsyncNext | Next = (node, mark) => {
     const newMarks = mark ? getAsList(mark) : [];
     const allMarks = newMarks.concat(marks);
     if (node.type === "element") {
-      return node.children.flatMap((child) =>
-        mapHtmlNodeToRichTextNode(child, allMarks, options),
-      );
+      return isSync(async, options)
+        ? node.children.flatMap((child) =>
+            mapHtmlNodeToRichTextNode(false, child, allMarks, options),
+          )
+        : Promise.all(
+            node.children.map((child) =>
+              mapHtmlNodeToRichTextNode(true, child, allMarks, options),
+            ),
+          ).then((r) => r.flat());
     }
-    return getAsList(mapHtmlNodeToRichTextNode(node, allMarks, options));
+    return isSync(async, options)
+      ? getAsList(mapHtmlNodeToRichTextNode(false, node, allMarks, options))
+      : mapHtmlNodeToRichTextNode(true, node, allMarks, options).then(
+          getAsList,
+        );
   };
   const next = mapChildren;
 
@@ -77,21 +132,26 @@ const mapHtmlNodeToRichTextNode = (
   }
 
   const tagConverter = convertTag[node.tagName] ?? defaultTagConverter;
-  const convertedNode = tagConverter(node, next);
+  const convertedNode = tagConverter(node, next as Next);
   return convertedNode;
-};
+}
 
-export const htmlStringToDocument = (
+export function htmlStringToDocument(
+  async: false,
   htmlString: string,
-  options: Options = {},
-): Document => {
-  const optionsWithDefaults: OptionsWithDefaults = {
-    convertTag: {
-      ...DEFAULT_TAG_CONVERTERS,
-      ...options.convertTag,
-    },
-    defaultTagConverter: options.defaultTagConverter ?? convertTagToChildren,
-    convertText: options.convertText ?? convertTextNodeToText,
+  options: Options,
+): Document;
+export function htmlStringToDocument(
+  async: true,
+  htmlString: string,
+  options: AsyncOptions,
+): Promise<Document>;
+export function htmlStringToDocument(
+  async: boolean,
+  htmlString: string,
+  options: Options | AsyncOptions,
+): MaybePromise<Document> {
+  const commonOptions = {
     parserOptions: {
       handleWhitespaceNodes:
         options?.parserOptions?.handleWhitespaceNodes ?? "preserve",
@@ -103,6 +163,28 @@ export const htmlStringToDocument = (
         options?.postProcessing?.handleTopLevelText ?? "preserve",
     },
   };
+  const optionsWithDefaults: OptionsWithDefaults | AsyncOptionsWithDefaults =
+    isSync(async, options)
+      ? {
+          convertTag: {
+            ...DEFAULT_SYNC_TAG_CONVERTERS,
+            ...options.convertTag,
+          },
+          defaultTagConverter:
+            options.defaultTagConverter ?? convertTagToChildren,
+          convertText: options.convertText ?? convertTextNodeToText,
+          ...commonOptions,
+        }
+      : {
+          convertTag: {
+            ...DEFAULT_ASYNC_TAG_CONVERTERS,
+            ...options.convertTag,
+          },
+          defaultTagConverter:
+            options.defaultTagConverter ?? convertTagToChildrenAsync,
+          convertText: options.convertText ?? convertTextNodeToTextAsync,
+          ...commonOptions,
+        };
 
   const parserOptions: ParserOptions = {
     ignoreWhiteSpace:
@@ -110,12 +192,50 @@ export const htmlStringToDocument = (
   };
 
   const parsedHtml = parseHtml(htmlString, parserOptions);
-  const richTextNodes = parsedHtml.flatMap((node) =>
-    mapHtmlNodeToRichTextNode(node, [], optionsWithDefaults),
-  );
-  const processedRichTextNodes = richTextNodes
-    .map((node) => processConvertedNodesFromTopLevel(node, optionsWithDefaults))
-    .filter(isNotNull);
 
-  return createDocumentNode(processedRichTextNodes);
-};
+  if (isSync(async, optionsWithDefaults)) {
+    const richTextNodes = parsedHtml.flatMap((node) =>
+      mapHtmlNodeToRichTextNode(false, node, [], optionsWithDefaults),
+    );
+    const processedRichTextNodes = richTextNodes
+      .map((node) =>
+        processConvertedNodesFromTopLevel(
+          node,
+          optionsWithDefaults.postProcessing,
+        ),
+      )
+      .filter(isNotNull);
+
+    return createDocumentNode(processedRichTextNodes);
+  }
+
+  return Promise.all(
+    parsedHtml.map((node) =>
+      mapHtmlNodeToRichTextNode(true, node, [], optionsWithDefaults),
+    ),
+  ).then((richTextNodes) => {
+    const processedRichTextNodes = richTextNodes
+      .flat()
+      .map((node) =>
+        processConvertedNodesFromTopLevel(
+          node,
+          optionsWithDefaults.postProcessing,
+        ),
+      )
+      .filter(isNotNull);
+
+    return createDocumentNode(processedRichTextNodes);
+  });
+}
+
+function isSync(
+  async: boolean,
+  options: Options | AsyncOptions,
+): options is Options;
+function isSync(
+  async: boolean,
+  options: OptionsWithDefaults | AsyncOptionsWithDefaults,
+): options is OptionsWithDefaults;
+function isSync(async: boolean): boolean {
+  return !async;
+}

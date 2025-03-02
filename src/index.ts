@@ -1,4 +1,4 @@
-export { htmlStringToDocument } from "./htmlStringToDocument";
+export { htmlStringToDocument } from "./htmlStringToDocumentSync";
 export type {
   HTMLElementNode,
   HTMLNode,

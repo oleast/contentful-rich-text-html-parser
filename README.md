@@ -295,7 +295,53 @@ htmlStringToDocument(htmlString, options);
 // };
 ```
 
-## invalid Rich Text Documents
+## Async converter functions
+
+If your converters have asynchronous implementations, simply append `/async` to your imports:
+
+```typescript
+import { Block, BLOCKS } from "@contentful/rich-text-types";
+import {
+  TagConverter,
+  htmlStringToDocument,
+} from "contentful-rich-text-html-parser/async";
+import { convertTagToChildren } from "contentful-rich-text-html-parser/converters/async";
+
+const imgToEmbeddedAssetConverter: TagConverter<Block> = async (node, next) => {
+  // custom function that uploads image to Contentful and returns asset ID
+  const id = await uploadAssetToContentful(node);
+
+  return {
+    nodeType: BLOCKS.EMBEDDED_ASSET,
+    content: await next(node),
+    data: {
+      target: {
+        sys: {
+          type: "Link",
+          linkType: "Asset",
+          id,
+        }
+      }
+    },
+  };
+};
+
+const logAndConvertTagToChildren: TagConverter = async (node, next) => {
+  // custom function that logs remotely
+  await log(`Unsupported tag: ${node.tagName}`);
+
+  return await convertTagToChildren(node, next); // skip element
+};
+
+htmlStringToDocument(htmlString, {
+  convertTag: {
+    img: imgToEmbeddedAssetConverter
+  },
+  defaultTagConverter: logAndConvertTagToChildren
+});
+```
+
+## Invalid Rich Text Documents
 
 The Contentful Rich Text format requires the `Document` adhere to a specific format.
 The full ruleset can be found in the [Contentful Documentation](https://www.contentful.com/developers/docs/concepts/rich-text/#rules-of-rich-text).

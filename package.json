@@ -26,10 +26,20 @@
       "import": "./dist/es/index.js",
       "require": "./dist/cjs/index.js"
     },
+    "./async": {
+      "types": "./dist/types/indexAsync.d.ts",
+      "import": "./dist/es/indexAsync.js",
+      "require": "./dist/cjs/indexAsync.js"
+    },
     "./converters": {
-      "types": "./dist/types/converters.d.ts",
-      "import": "./dist/es/converters.js",
-      "require": "./dist/cjs/converters.js"
+      "types": "./dist/types/convertersSync.d.ts",
+      "import": "./dist/es/convertersSync.js",
+      "require": "./dist/cjs/convertersSync.js"
+    },
+    "./converters/async": {
+      "types": "./dist/types/convertersAsync.d.ts",
+      "import": "./dist/es/convertersAsync.js",
+      "require": "./dist/cjs/convertersAsync.js"
     }
   },
   "types": "./dist/types/index.d.ts",

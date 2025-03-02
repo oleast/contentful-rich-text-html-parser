@@ -5,14 +5,18 @@ import {
   BLOCKS,
   INLINES,
   Mark,
+  MARKS,
   TopLevelBlock,
   validateRichTextDocument,
 } from "@contentful/rich-text-types";
-import { htmlStringToDocument } from "../htmlStringToDocument";
+import { convertTagToChildren } from "../convertersSync";
+import { convertTagToChildren as convertTagToChildrenAsync } from "../convertersAsync";
+import { htmlStringToDocument } from "../htmlStringToDocumentSync";
+import { htmlStringToDocument as htmlStringToDocumentAsync } from "../htmlStringToDocumentAsync";
 
 import { describe, expect, it } from "vitest";
 import { EXAMPLE_RICH_TEXT } from "./example";
-import { createDocumentNode } from "../utils";
+import { createDocumentNode, getAsList } from "../utils";
 import * as helpers from "./helpers";
 
 const htmlString = documentToHtmlString(EXAMPLE_RICH_TEXT);
@@ -332,5 +336,110 @@ describe("Parsing options for whitespace", () => {
         }),
       ]),
     );
+  });
+});
+
+describe("htmlStringToDocumentAsync", () => {
+  it("is equivalent to sync version", async () => {
+    const html = `
+      <blockquote>Quote</blockquote>
+      <h1>Heading 1</h1>
+      <h2>Heading 2</h2>
+      <h3>Heading 3</h3>
+      <h4>Heading 4</h4>
+      <h5>Heading 5</h5>
+      <h6>Heading 6</h6>
+      <hr>
+      <ol>
+        <li>Ordered list item 1</li>
+        <li>Ordered list item 2</li>
+      </ol>
+      <p>
+        Paragraph with
+        <a href="https://www.example.com">a link</a>,
+        <b>bold text</b>,
+        <em>italic text</em>,
+        <i>more italic text</i>,
+        <sub>subscript text</sub>,
+        <sup>superscript text</sup>,
+        <strong>more bold text</strong>,
+        <u>underlined text</u>
+      </p>
+      <pre>Preformatted text</pre>
+      <table>
+        <tr>
+          <th>Header 1</th>
+          <th>Header 2</th>
+        </tr>
+        <tr>
+          <td>Cell 1</td>
+          <td>Cell 2</td>
+        </tr>
+      </table>
+      <ul>
+        <li>Unordered list item 1</li>
+        <li>Unordered list item 2</li>
+      </ul>
+      <menu>
+        <item>Item 1</item>
+        <item>Item 2</item>
+      </menu>
+      <unknown>Unknown tag</unknown>
+    `;
+
+    const syncActual = htmlStringToDocument(html, {
+      convertTag: {
+        menu: (node, next) => next(node, { type: MARKS.STRIKETHROUGH }),
+        item: (node, next) => ({
+          nodeType: BLOCKS.EMBEDDED_ENTRY,
+          data: {},
+          content: getAsList(convertTagToChildren(node, next)),
+        }),
+      },
+      defaultTagConverter: (node, next) => ({
+        nodeType: BLOCKS.EMBEDDED_ASSET,
+        data: {},
+        content: getAsList(convertTagToChildren(node, next)),
+      }),
+      convertText: (node, marks) => ({
+        nodeType: "text",
+        data: {},
+        marks: [...marks, { type: "custom" }],
+        value: node.value,
+      }),
+    });
+
+    const asyncActual = await htmlStringToDocumentAsync(html, {
+      convertTag: {
+        menu: (node, next) => next(node, { type: MARKS.STRIKETHROUGH }),
+        item: async (node, next) => {
+          await new Promise((resolve) => setTimeout(resolve, 0));
+          return {
+            nodeType: BLOCKS.EMBEDDED_ENTRY,
+            data: {},
+            content: getAsList(await convertTagToChildrenAsync(node, next)),
+          };
+        },
+      },
+      defaultTagConverter: async (node, next) => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        return {
+          nodeType: BLOCKS.EMBEDDED_ASSET,
+          data: {},
+          content: getAsList(await convertTagToChildrenAsync(node, next)),
+        };
+      },
+      convertText: async (node, marks) => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        return {
+          nodeType: "text",
+          data: {},
+          marks: [...marks, { type: "custom" }],
+          value: node.value,
+        };
+      },
+    });
+
+    expect(syncActual).toStrictEqual(asyncActual);
   });
 });
