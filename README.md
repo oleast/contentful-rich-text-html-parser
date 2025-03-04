@@ -60,6 +60,7 @@ The default configuration supports the following list of HTML tags which by defa
 - `"strong" => MARKS.BOLD`
 - `"pre" => MARKS.CODE`
 - `"i" => MARKS.ITALIC`
+- `"em" => MARKS.ITALIC`
 - `"sub" => MARKS.SUBSCRIPT`
 - `"sup" => MARKS.SUPERSCRIPT`
 - `"u" => MARKS.UNDERLINE`
