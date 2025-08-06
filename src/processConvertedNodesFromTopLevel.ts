@@ -5,6 +5,7 @@ import {
   Text,
   TopLevelBlock,
 } from "@contentful/rich-text-types";
+
 import type { OptionsWithDefaults } from "./types.js";
 import {
   isNodeTypeBlock,

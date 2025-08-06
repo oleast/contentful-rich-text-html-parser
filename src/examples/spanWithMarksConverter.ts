@@ -1,5 +1,6 @@
 import { Inline, Mark } from "@contentful/rich-text-types";
-import { htmlStringToDocument, Options, TagConverter } from "../index";
+
+import { htmlStringToDocument, Options, TagConverter } from "../index.js";
 
 const boldMark: Mark = {
   type: "bold",

@@ -1,12 +1,12 @@
 export { htmlStringToDocument } from "./htmlStringToDocument.js";
 export type {
+  ConvertTagOptions,
   HTMLElementNode,
   HTMLNode,
-  HTMLTextNode,
   HTMLTagName,
+  HTMLTextNode,
+  Next,
   Options,
-  ConvertTagOptions,
   TagConverter,
   TextConverter,
-  Next,
 } from "./types.js";

@@ -3,6 +3,8 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 import prettierConfig from "eslint-config-prettier";
 import prettierPlugin from "eslint-plugin-prettier";
+import importPlugin from "eslint-plugin-import";
+import simpleImportSort from "eslint-plugin-simple-import-sort";
 
 export default [
   {
@@ -15,6 +17,8 @@ export default [
     files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
     plugins: {
       prettier: prettierPlugin,
+      import: importPlugin,
+      "simple-import-sort": simpleImportSort,
     },
     languageOptions: {
       globals: {
@@ -24,6 +28,20 @@ export default [
     },
     rules: {
       "prettier/prettier": "error",
+      // Import sorting
+      "simple-import-sort/imports": "error",
+      "simple-import-sort/exports": "error",
+      // Require .js extension for relative imports
+      "import/extensions": [
+        "error",
+        "ignorePackages",
+        {
+          js: "always",
+          mjs: "always",
+          ts: "always",
+          mts: "always",
+        },
+      ],
     },
   },
 ];

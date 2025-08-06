@@ -1,5 +1,3 @@
-import { isBlockType, isInlineType, isMarkType } from "./utils.js";
-import type { HTMLTagName, TagConverter, TextConverter } from "./types.js";
 import {
   Block,
   BLOCKS,
@@ -8,6 +6,9 @@ import {
   Mark,
   MARKS,
 } from "@contentful/rich-text-types";
+
+import type { HTMLTagName, TagConverter, TextConverter } from "./types.js";
+import { isBlockType, isInlineType, isMarkType } from "./utils.js";
 
 const DEFAULT_NODE_TYPE_FOR_HTML_TAG: Partial<
   Record<HTMLTagName, BLOCKS | MARKS | INLINES>

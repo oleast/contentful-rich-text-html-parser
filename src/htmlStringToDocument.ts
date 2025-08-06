@@ -1,18 +1,20 @@
 import {
-  convertTagToMark,
-  convertTagToBlock,
-  convertTagToHyperlink,
-  convertTextNodeToText,
-  convertTagToChildren,
-} from "./converters.js";
-import { parseHtml, ParserOptions } from "./parseHtml.js";
-import {
+  Block,
   Document,
+  Inline,
   Mark,
   Text,
-  Inline,
-  Block,
 } from "@contentful/rich-text-types";
+
+import {
+  convertTagToBlock,
+  convertTagToChildren,
+  convertTagToHyperlink,
+  convertTagToMark,
+  convertTextNodeToText,
+} from "./converters.js";
+import { parseHtml, ParserOptions } from "./parseHtml.js";
+import { processConvertedNodesFromTopLevel } from "./processConvertedNodesFromTopLevel.js";
 import type {
   HTMLNode,
   HTMLTagName,
@@ -22,7 +24,6 @@ import type {
   TagConverter,
 } from "./types.js";
 import { createDocumentNode, getAsList, isNotNull } from "./utils.js";
-import { processConvertedNodesFromTopLevel } from "./processConvertedNodesFromTopLevel.js";
 
 const DEFAULT_TAG_CONVERTERS: Partial<
   Record<HTMLTagName, TagConverter<Block | Inline | Text>>

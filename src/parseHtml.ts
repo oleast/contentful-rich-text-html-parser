@@ -1,8 +1,8 @@
-import { parseFragment } from "parse5";
 import type { DefaultTreeAdapterTypes as T } from "parse5";
-import { isNotNull, isWhiteSpace } from "./utils.js";
+import { parseFragment } from "parse5";
 
 import type { HTMLNode, HTMLTagName } from "./types.js";
+import { isNotNull, isWhiteSpace } from "./utils.js";
 
 export interface ParserOptions {
   ignoreWhiteSpace: boolean;
