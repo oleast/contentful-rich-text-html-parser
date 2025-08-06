@@ -4,5 +4,5 @@
     "module": "CommonJS",
     "outDir": "./dist/cjs"
   },
-  "exclude": ["src/test", "src/examples", "node_modules", "dist"]
+  "exclude": ["src/test", "src/examples", "node_modules", "dist", "eslint.config.mts"]
 }
