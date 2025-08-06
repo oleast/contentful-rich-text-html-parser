@@ -1,4 +1,4 @@
-import { TagConverter } from "./../types";
+import { TagConverter } from "./../types.js";
 import { documentToHtmlString } from "@contentful/rich-text-html-renderer";
 import {
   Block,
@@ -8,12 +8,12 @@ import {
   TopLevelBlock,
   validateRichTextDocument,
 } from "@contentful/rich-text-types";
-import { htmlStringToDocument } from "../htmlStringToDocument";
+import { htmlStringToDocument } from "../htmlStringToDocument.js";
 
 import { describe, expect, it } from "vitest";
-import { EXAMPLE_RICH_TEXT } from "./example";
-import { createDocumentNode } from "../utils";
-import * as helpers from "./helpers";
+import { EXAMPLE_RICH_TEXT } from "./example.js";
+import { createDocumentNode } from "../utils.js";
+import * as helpers from "./helpers.js";
 
 const htmlString = documentToHtmlString(EXAMPLE_RICH_TEXT);
 

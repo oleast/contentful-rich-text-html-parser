@@ -5,13 +5,13 @@ import {
   Text,
   TopLevelBlock,
 } from "@contentful/rich-text-types";
-import type { OptionsWithDefaults } from "./types";
+import type { OptionsWithDefaults } from "./types.js";
 import {
   isNodeTypeBlock,
   isNodeTypeInline,
   isNodeTypeText,
   isNodeTypeTopLevelBlock,
-} from "./utils";
+} from "./utils.js";
 
 export const processConvertedNodesFromTopLevel = (
   node: Block | Inline | Text,

@@ -6,7 +6,7 @@ import {
   Mark,
   Text,
 } from "@contentful/rich-text-types";
-import { getAsList } from "../utils";
+import { getAsList } from "../utils.js";
 
 export const createText = (value: string, marks?: Mark | Mark[]): Text => {
   return {

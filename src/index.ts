@@ -1,4 +1,4 @@
-export { htmlStringToDocument } from "./htmlStringToDocument";
+export { htmlStringToDocument } from "./htmlStringToDocument.js";
 export type {
   HTMLElementNode,
   HTMLNode,
@@ -9,4 +9,4 @@ export type {
   TagConverter,
   TextConverter,
   Next,
-} from "./types";
+} from "./types.js";

@@ -13,7 +13,7 @@ import {
   TopLevelBlock,
   TopLevelBlockEnum,
 } from "@contentful/rich-text-types";
-import { MARK_TYPES, INLINE_TYPES, BLOCK_TYPES } from "./constants";
+import { MARK_TYPES, INLINE_TYPES, BLOCK_TYPES } from "./constants.js";
 
 export const isNotNull = <T>(value: T): value is Exclude<T, null> =>
   value !== null;

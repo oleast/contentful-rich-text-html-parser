@@ -1,5 +1,5 @@
-import { isBlockType, isInlineType, isMarkType } from "./utils";
-import type { HTMLTagName, TagConverter, TextConverter } from "./types";
+import { isBlockType, isInlineType, isMarkType } from "./utils.js";
+import type { HTMLTagName, TagConverter, TextConverter } from "./types.js";
 import {
   Block,
   BLOCKS,
