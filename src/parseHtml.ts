@@ -1,43 +1,43 @@
+import type { DefaultTreeAdapterTypes as T } from "parse5";
 import { parseFragment } from "parse5";
-import {
-  ChildNode,
-  Template,
-  DocumentType,
-  TextNode,
-  CommentNode,
-} from "parse5/dist/tree-adapters/default";
-import { isNotNull, isWhiteSpace } from "./utils";
 
-import type { HTMLNode, HTMLTagName } from "./types";
+import type { HTMLNode, HTMLTagName } from "./types.js";
+import { isNotNull, isWhiteSpace } from "./utils.js";
 
 export interface ParserOptions {
   ignoreWhiteSpace: boolean;
 }
 
-const isChildNodeComment = (childNode: ChildNode): childNode is CommentNode => {
+const isChildNodeComment = (
+  childNode: T.ChildNode,
+): childNode is T.CommentNode => {
   return childNode.nodeName === "#comment";
 };
 
-const isChildNodeTextNode = (childNode: ChildNode): childNode is TextNode => {
+const isChildNodeTextNode = (
+  childNode: T.ChildNode,
+): childNode is T.TextNode => {
   return childNode.nodeName === "#text";
 };
 
-const isChildNodeTemplate = (childNode: ChildNode): childNode is Template => {
+const isChildNodeTemplate = (
+  childNode: T.ChildNode,
+): childNode is T.Template => {
   return childNode.nodeName === "template";
 };
 
 const isChildNodeDocumentType = (
-  childNode: ChildNode,
-): childNode is DocumentType => {
+  childNode: T.ChildNode,
+): childNode is T.DocumentType => {
   return childNode.nodeName === "#documentType";
 };
 
-const isTextNodePureWhiteSpace = (textNode: TextNode): boolean => {
+const isTextNodePureWhiteSpace = (textNode: T.TextNode): boolean => {
   return isWhiteSpace(textNode.value);
 };
 
 const mapChildNodeToHtmlNode = (
-  childNode: ChildNode,
+  childNode: T.ChildNode,
   options: ParserOptions,
 ): HTMLNode | null => {
   if (

@@ -1,9 +1,9 @@
 {
   "extends": "./tsconfig",
   "compilerOptions": {
-    "module": "ES2015",
-    "target": "ES2015",
+    "module": "es2015",
+    "target": "es2015",
     "outDir": "./dist/es"
   },
-  "exclude": ["src/test", "src/examples", "node_modules", "dist"]
+  "exclude": ["src/test", "src/examples", "node_modules", "dist", "eslint.config.mts"]
 }

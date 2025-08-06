@@ -1,5 +1,6 @@
 import { Block, BLOCKS } from "@contentful/rich-text-types";
-import { htmlStringToDocument, Options, TagConverter } from "../index";
+
+import { htmlStringToDocument, Options, TagConverter } from "../index.js";
 
 const divToParagraphConverter: TagConverter<Block> = (node, next) => {
   return {
