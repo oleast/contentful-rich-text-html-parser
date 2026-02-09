@@ -14,15 +14,20 @@ jobs:
   automatic-release:
     name: Semantic Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
     outputs:
       release_version: ${{ steps.semantic-release.outputs.release-version }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup NodeJS
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
           cache: "npm"
           cache-dependency-path: "**/package-lock.json"
 
@@ -32,8 +37,7 @@ jobs:
       - name: Build
         run: npm run build
 
-      - uses: codfish/semantic-release-action@v3
+      - uses: codfish/semantic-release-action@v5
         id: semantic-release
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
