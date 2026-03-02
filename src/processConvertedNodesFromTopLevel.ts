@@ -26,7 +26,9 @@ export const processConvertedNodesFromTopLevel = (
     if (node.nodeType === BLOCKS.DOCUMENT) {
       return null;
     }
-    // TODO: Handle top level list items and table elements
+    // Note: Orphaned list items and table elements are handled by processOrphanedNodes.ts
+    // before this function is called. Any remaining orphaned elements at this point
+    // are intentionally preserved based on postProcessing options.
     return node as unknown as TopLevelBlock;
   }
   if (isNodeTypeInline(node)) {

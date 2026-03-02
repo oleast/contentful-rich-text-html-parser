@@ -15,6 +15,7 @@ import {
 } from "./converters.js";
 import { parseHtml, ParserOptions } from "./parseHtml.js";
 import { processConvertedNodesFromTopLevel } from "./processConvertedNodesFromTopLevel.js";
+import { processOrphanedNodes } from "./processOrphanedNodes.js";
 import type {
   HTMLNode,
   HTMLTagName,
@@ -103,6 +104,10 @@ export const htmlStringToDocument = (
         options?.postProcessing?.handleTopLevelInlines ?? "preserve",
       handleTopLevelText:
         options?.postProcessing?.handleTopLevelText ?? "preserve",
+      handleOrphanedListItems:
+        options?.postProcessing?.handleOrphanedListItems ?? "preserve",
+      handleOrphanedTableElements:
+        options?.postProcessing?.handleOrphanedTableElements ?? "preserve",
     },
   };
 
@@ -115,7 +120,11 @@ export const htmlStringToDocument = (
   const richTextNodes = parsedHtml.flatMap((node) =>
     mapHtmlNodeToRichTextNode(node, [], optionsWithDefaults),
   );
-  const processedRichTextNodes = richTextNodes
+  const orphanProcessedNodes = processOrphanedNodes(
+    richTextNodes,
+    optionsWithDefaults,
+  );
+  const processedRichTextNodes = orphanProcessedNodes
     .map((node) => processConvertedNodesFromTopLevel(node, optionsWithDefaults))
     .filter(isNotNull);
 

@@ -58,6 +58,12 @@ export type ConvertTagOptions = Record<HTMLTagName | string, TagConverter>;
 export type HandleWhitespaceNodes = "preserve" | "remove";
 export type HandleTopLevelText = "preserve" | "remove" | "wrap-paragraph";
 export type HandleTopLevelInlines = "preserve" | "remove" | "wrap-paragraph";
+export type HandleOrphanedListItems =
+  | "preserve"
+  | "remove"
+  | "wrap-ul"
+  | "wrap-ol";
+export type HandleOrphanedTableElements = "preserve" | "remove" | "wrap-table";
 
 export interface ParserOptions {
   handleWhitespaceNodes: HandleWhitespaceNodes;
@@ -66,6 +72,8 @@ export interface ParserOptions {
 export interface PostProcessingOptions {
   handleTopLevelInlines: HandleTopLevelInlines;
   handleTopLevelText: HandleTopLevelText;
+  handleOrphanedListItems: HandleOrphanedListItems;
+  handleOrphanedTableElements: HandleOrphanedTableElements;
 }
 
 export interface OptionsWithDefaults {
@@ -82,3 +90,23 @@ export type Options = Partial<
     postProcessing: Partial<PostProcessingOptions>;
   }
 >;
+
+export type NodeGroup =
+  | OrphanedListItemsGroup
+  | OrphanedTableElementsGroup
+  | OtherGroup;
+
+interface OrphanedListItemsGroup {
+  type: "orphaned-list-items";
+  nodes: Block[];
+}
+
+interface OrphanedTableElementsGroup {
+  type: "orphaned-table-elements";
+  nodes: Block[];
+}
+
+interface OtherGroup {
+  type: "other";
+  nodes: Array<Block | Inline | Text>;
+}
