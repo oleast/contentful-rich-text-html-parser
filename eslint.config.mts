@@ -1,6 +1,6 @@
 import js from "@eslint/js";
 import prettierConfig from "eslint-config-prettier";
-import importPlugin from "eslint-plugin-import";
+import { importX } from "eslint-plugin-import-x";
 import prettierPlugin from "eslint-plugin-prettier";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 import globals from "globals";
@@ -17,7 +17,7 @@ export default [
     files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
     plugins: {
       prettier: prettierPlugin,
-      import: importPlugin,
+      "import-x": importX,
       "simple-import-sort": simpleImportSort,
     },
     languageOptions: {
@@ -31,8 +31,8 @@ export default [
       // Import sorting
       "simple-import-sort/imports": "error",
       "simple-import-sort/exports": "error",
-      // Require .js extension for relative imports
-      "import/extensions": [
+      // Import hygiene
+      "import-x/extensions": [
         "error",
         "ignorePackages",
         {
@@ -42,6 +42,14 @@ export default [
           mts: "always",
         },
       ],
+      "import-x/no-self-import": "error",
+      "import-x/no-useless-path-segments": "error",
+      "import-x/consistent-type-specifier-style": [
+        "error",
+        "prefer-top-level",
+      ],
+      "import-x/export": "error",
+      "import-x/no-duplicates": "error",
     },
   },
 ];

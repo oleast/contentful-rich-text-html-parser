@@ -11,8 +11,8 @@ import { i18n } from "@lingui/core";
 import { describe, expect, it } from "vitest";
 
 import { htmlStringToDocument } from "../htmlStringToDocument.js";
+import { TagConverter } from "../types.js";
 import { createDocumentNode } from "../utils.js";
-import { TagConverter } from "./../types.js";
 import { EXAMPLE_RICH_TEXT } from "./example.js";
 import * as helpers from "./helpers.js";
 
