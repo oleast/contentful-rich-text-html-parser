@@ -47,7 +47,7 @@
   "devDependencies": {
     "@contentful/rich-text-html-renderer": "^17.1.2",
     "@eslint/js": "^9.35.0",
-    "@lingui/core": "^5.4.1",
+    "@lingui/core": "^6.0.0",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.0",
