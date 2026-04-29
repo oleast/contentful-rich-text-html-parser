@@ -296,7 +296,7 @@ htmlStringToDocument(htmlString, options);
 // };
 ```
 
-## invalid Rich Text Documents
+## Invalid Rich Text Documents
 
 The Contentful Rich Text format requires the `Document` adhere to a specific format.
 The full ruleset can be found in the [Contentful Documentation](https://www.contentful.com/developers/docs/concepts/rich-text/#rules-of-rich-text).
@@ -311,7 +311,7 @@ Uploading an invalid document to Contentful will result in an error. The `@conte
 - Add a custom `TagConverter` og `TextConverter` that handles your case. (To handle cases like wrong child elements of `Inline` nodes, list elements, or tables).
 - Change your HTML to a valid format before converting it.
 
-### Handling invalid top level nodes
+### 1. Handling invalid top level nodes
 
 Some elements can not be at the top level of a `Document`. This includes `Text`-nodes, `Inline`-nodes, `li`-elements, and any child element of `table` (like a `tr` or `td`).
 
@@ -339,7 +339,54 @@ How it works:
 - `"remove"`: Remove the node with all its child nodes from the document.
 - `"wrap-paragraph"`: Wrap the node in a simple `paragraph`-node to make it valid.
 
-### Handling extra whitespace nodes
+### 2. Handling orphaned list items
+
+When importing HTML from external sources, you may encounter "orphaned" list items (`<li>`) that appear outside of `<ul>` or `<ol>` tags. These would create invalid Contentful Rich Text documents.
+
+The `handleOrphanedListItems` option controls how orphaned list items are processed:
+
+- `"preserve"` (default) - Keep orphaned list items as-is (may produce invalid document)
+- `"remove"` - Remove orphaned list items from the output
+- `"wrap-ul"` - Wrap consecutive orphaned list items in an unordered list
+- `"wrap-ol"` - Wrap consecutive orphaned list items in an ordered list
+
+```typescript
+import { htmlStringToDocument } from "contentful-rich-text-html-parser";
+
+// Wrap orphaned list items in unordered lists
+htmlStringToDocument("<li>Item 1</li><li>Item 2</li>", {
+  postProcessing: {
+    handleOrphanedListItems: "wrap-ul",
+  },
+});
+```
+
+When `wrap-ul` or `wrap-ol` is set, consecutive orphaned `<li>` elements are grouped together and wrapped in a single list. If non-list content appears between list items (e.g., a paragraph), separate lists are created.
+
+### 3. Handling orphaned table elements
+
+When importing HTML from external sources, you may encounter "orphaned" table elements (`<tr>`, `<td>`, `<th>`) that appear outside of proper table structure. These would create invalid Contentful Rich Text documents.
+
+The `handleOrphanedTableElements` option controls how orphaned table elements are processed:
+
+- `"preserve"` (default) - Keep orphaned table elements as-is (may produce invalid document)
+- `"remove"` - Remove orphaned table elements from the output
+- `"wrap-table"` - Wrap orphaned elements in proper table structure
+
+```typescript
+import { htmlStringToDocument } from "contentful-rich-text-html-parser";
+
+// Wrap orphaned table elements in proper structure
+htmlStringToDocument("<tr><td>Cell content</td></tr>", {
+  postProcessing: {
+    handleOrphanedTableElements: "wrap-table",
+  },
+});
+```
+
+When `wrap-table` is set, orphaned elements are wrapped in the full required hierarchy. A lone `<td>` or `<th>` becomes `TABLE > TABLE_ROW > TABLE_CELL`, and consecutive orphaned `<tr>` elements are grouped into a single `TABLE`.
+
+### 4. Handling extra whitespace nodes
 
 A formatted HTML string might include whitespace that will be parsed and added to the document output. This can result in unwanted text nodes or an invalid document.
 

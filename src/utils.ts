@@ -70,3 +70,50 @@ export const createDocumentNode = (
   data,
   content,
 });
+
+// --- List type guards ---
+
+export const isListItem = (node: Block | Inline | Text): node is Block =>
+  isNodeTypeBlock(node) && node.nodeType === BLOCKS.LIST_ITEM;
+
+export const isListContainer = (nodeType: BLOCKS): boolean =>
+  nodeType === BLOCKS.UL_LIST || nodeType === BLOCKS.OL_LIST;
+
+// --- Table type guards ---
+
+export const isTableRow = (node: Block | Inline | Text): node is Block =>
+  isNodeTypeBlock(node) && node.nodeType === BLOCKS.TABLE_ROW;
+
+export const isTableCell = (node: Block | Inline | Text): node is Block =>
+  isNodeTypeBlock(node) &&
+  (node.nodeType === BLOCKS.TABLE_CELL ||
+    node.nodeType === BLOCKS.TABLE_HEADER_CELL);
+
+export const isTableContainer = (nodeType: BLOCKS): boolean =>
+  nodeType === BLOCKS.TABLE;
+
+export const isTableRowContainer = (nodeType: BLOCKS): boolean =>
+  nodeType === BLOCKS.TABLE_ROW;
+
+// --- Block factories ---
+
+export const createList = (
+  items: Block[],
+  listType: BLOCKS.UL_LIST | BLOCKS.OL_LIST,
+): Block => ({
+  nodeType: listType,
+  data: {},
+  content: items,
+});
+
+export const createTableRow = (cells: Block[]): Block => ({
+  nodeType: BLOCKS.TABLE_ROW,
+  data: {},
+  content: cells,
+});
+
+export const createTable = (rows: Block[]): Block => ({
+  nodeType: BLOCKS.TABLE,
+  data: {},
+  content: rows,
+});
